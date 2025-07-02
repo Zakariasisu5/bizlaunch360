@@ -1,73 +1,105 @@
-# Welcome to your Lovable project
+# 🚀 BizLaunch360 – Smart Business Suite for Entrepreneurs
 
-## Project info
+**Launch, manage, and grow your business from one beautiful dashboard.**
 
-**URL**: https://lovable.dev/projects/deea2c89-76c7-48ba-8ef6-aba911c7c63f
+BizLaunch360 is a modern, AI-powered business management platform designed to empower small business owners in the USA. From building a professional business plan to managing customers, invoices, appointments, and finances — BizLaunch360 helps you run your business like a pro.
 
-## How can I edit this code?
+![BizLaunch360 Dashboard Preview](./screenshot.png)
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 🌟 Key Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/deea2c89-76c7-48ba-8ef6-aba911c7c63f) and start prompting.
+- ✨ **Smart Business Plan Generator** – Generate custom business plans in minutes using AI.
+- 💳 **Invoicing & Payments** – Create professional invoices and receive payments via Stripe.
+- 📅 **Appointment Booking** – Let customers book your services online.
+- 📈 **Dashboard & Analytics** – Track income, expenses, customer activity, and bookings in one place.
+- 📇 **CRM System** – Manage customers, add notes, and track interactions.
+- 🛠 **Business Setup Assistant** – Helps you register, get an EIN, and stay compliant (US-focused).
+- 🌐 **No-Code Website Builder** – Build your own landing page with ease.
+- 🔐 **Secure & Cloud-Based** – Powered by Supabase with real-time data sync.
+- 📱 **Fully Responsive** – Works beautifully on desktop, tablet, and mobile.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 💼 Who is it for?
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Entrepreneurs & solo founders
+- Local service businesses (salons, cleaners, coaches, etc.)
+- Freelancers & consultants
+- Startups launching in the USA
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🛠 Tech Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+| Layer       | Tech Used                  |
+|-------------|----------------------------|
+| Frontend    | React.js + Tailwind CSS / Next.js |
+| Backend     | Supabase (Auth, DB, Storage, Realtime) |
+| Payments    | Stripe API                 |
+| AI          | OpenAI API (GPT)           |
+| Charts      | Chart.js / Recharts        |
+| Scheduling  | FullCalendar.js            |
+| Hosting     | Vercel (Frontend), Supabase (Backend) |
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 📦 Installation & Setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-username/bizlaunch360.git
+cd bizlaunch360
 
-**Edit a file directly in GitHub**
+📸 Screenshots
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+> 📊 Dashboard | 📅 Booking | 💰 Invoices | ✨ Business Plan
 
-**Use GitHub Codespaces**
+![file_000000001458622fb8ce6607660509c8](https://github.com/user-attachments/assets/18221714-bd5e-4aaf-ba0f-1edc8f30bbd5)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
 
-This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/deea2c89-76c7-48ba-8ef6-aba911c7c63f) and click on Share -> Publish.
+🙌 Contributing
 
-## Can I connect a custom domain to my Lovable project?
+We welcome contributions! If you’d like to:
 
-Yes, you can!
+Add a new feature
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Report a bug
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Improve the UI/UX
+
+Write documentation
+
+
+Please open a pull request or an issue.
+
+
+---
+
+📝 License
+
+MIT License. See LICENSE for details.
+
+
+---
+
+📣 Live Demo
+
+Check out the live version here:
+👉 https://bizlaunch360.vercel.app
+
+
+---
+
+💬 Let's Connect
+
+Created with 💙 by Zakaria Sisu
+📧 zakariasisu5@gmail.com
+🌐 LinkedIn
+🐙 GitHub
