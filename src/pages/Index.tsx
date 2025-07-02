@@ -1,7 +1,7 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Rocket, 
   FileText, 
@@ -11,51 +11,54 @@ import {
   BarChart3, 
   Sparkles,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Play
 } from 'lucide-react';
 
-const Index = () => {
-  const features = [
-    {
-      icon: FileText,
-      title: 'AI Business Plan Generator',
-      description: 'Create comprehensive business plans with AI assistance'
-    },
-    {
-      icon: DollarSign,
-      title: 'Finance & Invoicing',
-      description: 'Manage invoices, track expenses, and accept payments'
-    },
-    {
-      icon: Calendar,
-      title: 'Appointment Booking',
-      description: 'Let customers book appointments online easily'
-    },
-    {
-      icon: Users,
-      title: 'Customer Management',
-      description: 'Organize and track all your customer relationships'
-    },
-    {
-      icon: BarChart3,
-      title: 'Analytics Dashboard',
-      description: 'Monitor your business growth with detailed insights'
-    },
-    {
-      icon: Sparkles,
-      title: 'Smart Automation',
-      description: 'Automate routine tasks and focus on growth'
-    }
-  ];
+const features = [
+  {
+    icon: FileText,
+    title: 'AI Business Plan Generator',
+    description: 'Create comprehensive business plans with AI assistance'
+  },
+  {
+    icon: DollarSign,
+    title: 'Finance & Invoicing',
+    description: 'Manage invoices, track expenses, and accept payments'
+  },
+  {
+    icon: Calendar,
+    title: 'Appointment Booking',
+    description: 'Let customers book appointments online easily'
+  },
+  {
+    icon: Users,
+    title: 'Customer Management',
+    description: 'Organize and track all your customer relationships'
+  },
+  {
+    icon: BarChart3,
+    title: 'Analytics Dashboard',
+    description: 'Monitor your business growth with detailed insights'
+  },
+  {
+    icon: Sparkles,
+    title: 'Smart Automation',
+    description: 'Automate routine tasks and focus on growth'
+  }
+];
 
-  const benefits = [
-    'Complete business management solution',
-    'AI-powered tools and insights',
-    'Professional invoicing and payments',
-    'Customer booking system',
-    'Growth analytics and reporting',
-    'Mobile-friendly interface'
-  ];
+const benefits = [
+  'Complete business management solution',
+  'AI-powered tools and insights',
+  'Professional invoicing and payments',
+  'Customer booking system',
+  'Growth analytics and reporting',
+  'Mobile-friendly interface'
+];
+
+const Index = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -102,13 +105,31 @@ const Index = () => {
                   <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-xl"
-              >
-                Watch Demo
-              </Button>
+              <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="w-full sm:w-auto border-white/30 bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-xl transition-all duration-200 hover:scale-105"
+                  >
+                    <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Watch Demo
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl w-full bg-bizNeutral-900 border-bizNeutral-700">
+                  <div className="relative w-full h-0 pb-[56.25%] bg-gradient-to-br from-bizPrimary/20 to-bizAccent/20 rounded-xl overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                          <Play className="w-8 h-8 text-white ml-1" />
+                        </div>
+                        <h3 className="text-xl font-semibold mb-2">BizLaunch360 Demo</h3>
+                        <p className="text-white/80">See how easy it is to manage your business</p>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
