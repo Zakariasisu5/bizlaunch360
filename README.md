@@ -4,7 +4,8 @@
 
 BizLaunch360 is a modern, AI-powered business management platform designed to empower small business owners in the USA. From building a professional business plan to managing customers, invoices, appointments, and finances — BizLaunch360 helps you run your business like a pro.
 
-![BizLaunch360 Dashboard Preview](./screenshot.png)
+![file_000000001458622fb8ce6607660509c8](https://github.com/user-attachments/assets/6f3b226a-8b9b-4d43-995d-f1acc4070856)
+
 
 ---
 
@@ -92,7 +93,7 @@ MIT License. See LICENSE for details.
 📣 Live Demo
 
 Check out the live version here:
-👉 https://bizlaunch360.vercel.app
+👉 https://bizlaunch360.vercel.app/
 
 
 ---
