@@ -1,548 +1,310 @@
 
 import React, { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, 
   Plus, 
-  Search,
-  Mail,
-  Phone,
+  Search, 
+  Mail, 
+  Phone, 
   MapPin,
-  Calendar,
-  DollarSign,
   Edit,
   Trash2,
-  UserPlus,
   Filter,
-  Star,
-  Building
+  Download,
+  UserPlus
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Customer {
   id: string;
   name: string;
   email: string;
   phone: string;
-  company: string;
-  address: string;
+  company?: string;
+  address?: string;
   status: 'active' | 'inactive' | 'lead' | 'prospect';
-  value: number;
+  totalSpent: number;
   lastContact: string;
-  notes: string;
-  tags: string[];
+  notes?: string;
 }
 
 const CRM = () => {
-  const [customers, setCustomers] = useState<Customer[]>([
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'lead' | 'prospect'>('all');
+
+  // Mock customer data
+  const [customers] = useState<Customer[]>([
     {
       id: '1',
       name: 'John Smith',
-      email: 'john@acmecorp.com',
+      email: 'john@example.com',
       phone: '+1 (555) 123-4567',
-      company: 'Acme Corp',
-      address: '123 Business St, City, State 12345',
+      company: 'Tech Solutions Inc',
+      address: '123 Main St, City, State 12345',
       status: 'active',
-      value: 15000,
-      lastContact: '2024-01-20',
-      notes: 'Great client, always pays on time. Interested in expanding services.',
-      tags: ['VIP', 'Recurring']
+      totalSpent: 2500,
+      lastContact: '2024-01-15',
+      notes: 'Interested in premium package'
     },
     {
       id: '2',
       name: 'Sarah Johnson',
-      email: 'sarah@techsolutions.com',
+      email: 'sarah@company.com',
       phone: '+1 (555) 987-6543',
-      company: 'Tech Solutions Inc',
-      address: '456 Innovation Ave, Tech City, TC 67890',
-      status: 'active',
-      value: 8500,
-      lastContact: '2024-01-18',
-      notes: 'Startup client with high growth potential. Very tech-savvy.',
-      tags: ['Startup', 'High Potential']
+      company: 'Marketing Pro',
+      status: 'lead',
+      totalSpent: 0,
+      lastContact: '2024-01-10',
+      notes: 'Responded to email campaign'
     },
     {
       id: '3',
       name: 'Mike Davis',
-      email: 'mike@startup.com',
+      email: 'mike@business.com',
       phone: '+1 (555) 456-7890',
-      company: 'StartupXYZ',
-      address: '789 Entrepreneur Blvd, Startup Valley, SV 54321',
-      status: 'lead',
-      value: 0,
-      lastContact: '2024-01-15',
-      notes: 'Potential client, needs follow-up on proposal.',
-      tags: ['New Lead', 'Proposal Sent']
+      status: 'prospect',
+      totalSpent: 1200,
+      lastContact: '2024-01-08'
     },
     {
       id: '4',
       name: 'Emily Wilson',
-      email: 'emily@consulting.com',
+      email: 'emily@startup.com',
       phone: '+1 (555) 321-0987',
-      company: 'Wilson Consulting',
-      address: '321 Professional Plaza, Business District, BD 98765',
-      status: 'prospect',
-      value: 12000,
-      lastContact: '2024-01-10',
-      notes: 'Interested in our premium package. Schedule follow-up call.',
-      tags: ['Premium Interest', 'Follow-up']
+      company: 'Innovation Labs',
+      status: 'inactive',
+      totalSpent: 800,
+      lastContact: '2023-12-20'
     }
   ]);
 
-  const [newCustomer, setNewCustomer] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    address: '',
-    status: 'lead' as const,
-    notes: '',
-    tags: ''
-  });
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-bizSuccess text-white';
-      case 'inactive': return 'bg-bizNeutral-400 text-white';
-      case 'lead': return 'bg-bizPrimary text-white';
-      case 'prospect': return 'bg-bizWarning text-white';
-      default: return 'bg-bizNeutral-200 text-bizNeutral-800';
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/login');
     }
-  };
+  }, [user, navigate]);
+
+  if (!user) return null;
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         customer.company.toLowerCase().includes(searchTerm.toLowerCase());
+                         customer.company?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || customer.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
 
-  const handleCreateCustomer = () => {
-    if (!newCustomer.name || !newCustomer.email) {
-      toast.error('Please fill in name and email fields');
-      return;
+  const getStatusColor = (status: Customer['status']) => {
+    switch (status) {
+      case 'active': return 'bg-bizSuccess text-white';
+      case 'lead': return 'bg-bizPrimary text-white';
+      case 'prospect': return 'bg-bizWarning text-white';
+      case 'inactive': return 'bg-bizNeutral-400 text-white';
+      default: return 'bg-bizNeutral-400 text-white';
     }
-
-    const customer: Customer = {
-      id: Date.now().toString(),
-      name: newCustomer.name,
-      email: newCustomer.email,
-      phone: newCustomer.phone,
-      company: newCustomer.company,
-      address: newCustomer.address,
-      status: newCustomer.status,
-      value: 0,
-      lastContact: new Date().toISOString().split('T')[0],
-      notes: newCustomer.notes,
-      tags: newCustomer.tags ? newCustomer.tags.split(',').map(tag => tag.trim()) : []
-    };
-
-    setCustomers([customer, ...customers]);
-    setNewCustomer({
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      address: '',
-      status: 'lead',
-      notes: '',
-      tags: ''
-    });
-    toast.success('Customer added successfully!');
-  };
-
-  const handleUpdateStatus = (customerId: string, newStatus: Customer['status']) => {
-    setCustomers(customers.map(customer => 
-      customer.id === customerId ? { ...customer, status: newStatus, lastContact: new Date().toISOString().split('T')[0] } : customer
-    ));
-    toast.success(`Customer status updated to ${newStatus}!`);
-  };
-
-  const handleDeleteCustomer = (customerId: string) => {
-    setCustomers(customers.filter(customer => customer.id !== customerId));
-    toast.success('Customer deleted successfully!');
   };
 
   const totalCustomers = customers.length;
   const activeCustomers = customers.filter(c => c.status === 'active').length;
-  const totalValue = customers.filter(c => c.status === 'active').reduce((sum, c) => sum + c.value, 0);
-  const leads = customers.filter(c => c.status === 'lead').length;
+  const totalRevenue = customers.reduce((sum, c) => sum + c.totalSpent, 0);
+  const newLeads = customers.filter(c => c.status === 'lead').length;
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-bizNeutral-900">Customer Management</h1>
-            <p className="text-bizNeutral-600 mt-2">Manage your customer relationships and track interactions</p>
+            <p className="text-bizNeutral-600 mt-1">Manage your customers and track relationships</p>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="btn-primary mt-4 sm:mt-0">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Customer
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add New Customer</DialogTitle>
-                <DialogDescription>Add a new customer to your CRM system</DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customer-name">Name *</Label>
-                  <Input
-                    id="customer-name"
-                    placeholder="Enter customer name"
-                    value={newCustomer.name}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customer-email">Email *</Label>
-                  <Input
-                    id="customer-email"
-                    type="email"
-                    placeholder="customer@example.com"
-                    value={newCustomer.email}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customer-phone">Phone</Label>
-                  <Input
-                    id="customer-phone"
-                    placeholder="+1 (555) 123-4567"
-                    value={newCustomer.phone}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customer-company">Company</Label>
-                  <Input
-                    id="customer-company"
-                    placeholder="Company name"
-                    value={newCustomer.company}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, company: e.target.value })}
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="customer-address">Address</Label>
-                  <Input
-                    id="customer-address"
-                    placeholder="Full address"
-                    value={newCustomer.address}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customer-status">Status</Label>
-                  <Select value={newCustomer.status} onValueChange={(value: Customer['status']) => setNewCustomer({ ...newCustomer, status: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lead">Lead</SelectItem>
-                      <SelectItem value="prospect">Prospect</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customer-tags">Tags (comma-separated)</Label>
-                  <Input
-                    id="customer-tags"
-                    placeholder="VIP, Recurring, High Value"
-                    value={newCustomer.tags}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, tags: e.target.value })}
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="customer-notes">Notes</Label>
-                  <Textarea
-                    id="customer-notes"
-                    placeholder="Additional notes about this customer..."
-                    value={newCustomer.notes}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, notes: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </div>
-              <Button onClick={handleCreateCustomer} className="w-full btn-primary mt-4">
-                Add Customer
-              </Button>
-            </DialogContent>
-          </Dialog>
+          <Button className="btn-primary">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Customer
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">Total Customers</CardTitle>
+              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+                Total Customers
+              </CardTitle>
               <Users className="h-4 w-4 text-bizPrimary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-bizNeutral-900">{totalCustomers}</div>
-              <div className="text-xs text-bizNeutral-500">across all stages</div>
+              <p className="text-xs text-bizNeutral-500">All time</p>
             </CardContent>
           </Card>
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">Active Customers</CardTitle>
-              <UserPlus className="h-4 w-4 text-bizSuccess" />
+              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+                Active Customers
+              </CardTitle>
+              <Users className="h-4 w-4 text-bizSuccess" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-bizNeutral-900">{activeCustomers}</div>
-              <div className="text-xs text-bizNeutral-500">currently active</div>
+              <p className="text-xs text-bizSuccess">Currently active</p>
             </CardContent>
           </Card>
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">Customer Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-bizWarning" />
+              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+                Total Revenue
+              </CardTitle>
+              <Users className="h-4 w-4 text-bizWarning" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">${totalValue.toLocaleString()}</div>
-              <div className="text-xs text-bizNeutral-500">total active value</div>
+              <div className="text-2xl font-bold text-bizNeutral-900">${totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-bizNeutral-500">From all customers</p>
             </CardContent>
           </Card>
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">New Leads</CardTitle>
-              <Star className="h-4 w-4 text-bizAccent" />
+              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+                New Leads
+              </CardTitle>
+              <Users className="h-4 w-4 text-bizAccent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{leads}</div>
-              <div className="text-xs text-bizNeutral-500">potential customers</div>
+              <div className="text-2xl font-bold text-bizNeutral-900">{newLeads}</div>
+              <p className="text-xs text-bizAccent">This month</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filter */}
+        {/* Filters and Search */}
         <Card>
           <CardHeader>
-            <CardTitle>Customer Database</CardTitle>
-            <CardDescription>Search and manage your customer relationships</CardDescription>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <CardTitle>Customer List</CardTitle>
+                <CardDescription>Manage and track all your customers</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-bizNeutral-400" />
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-bizNeutral-400 h-4 w-4" />
                 <Input
-                  placeholder="Search customers by name, email, or company..."
+                  placeholder="Search customers..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="lead">Leads</SelectItem>
-                  <SelectItem value="prospect">Prospects</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                className="px-3 py-2 border border-bizNeutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bizPrimary"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="lead">Lead</option>
+                <option value="prospect">Prospect</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
 
+            {/* Customer List */}
             <div className="space-y-4">
               {filteredCustomers.map((customer) => (
-                <div key={customer.id} className="flex items-center justify-between p-4 border border-bizNeutral-200 rounded-lg card-hover">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="p-2 bg-bizPrimary/10 rounded-lg">
-                      <Users className="h-6 w-6 text-bizPrimary" />
-                    </div>
+                <div key={customer.id} className="border border-bizNeutral-200 rounded-lg p-4 hover:shadow-soft transition-shadow">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <div className="font-medium text-bizNeutral-900">{customer.name}</div>
-                        <Badge className={getStatusColor(customer.status)}>{customer.status}</Badge>
-                        {customer.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-bizNeutral-900">{customer.name}</h3>
+                        <Badge className={getStatusColor(customer.status)}>
+                          {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
+                        </Badge>
                       </div>
-                      <div className="flex items-center space-x-4 text-sm text-bizNeutral-600 mt-1">
-                        {customer.company && (
-                          <span className="flex items-center">
-                            <Building className="h-3 w-3 mr-1" />
-                            {customer.company}
-                          </span>
-                        )}
-                        <span className="flex items-center">
-                          <Mail className="h-3 w-3 mr-1" />
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-bizNeutral-600">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
                           {customer.email}
-                        </span>
-                        {customer.phone && (
-                          <span className="flex items-center">
-                            <Phone className="h-3 w-3 mr-1" />
-                            {customer.phone}
-                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          {customer.phone}
+                        </div>
+                        {customer.company && (
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            {customer.company}
+                          </div>
+                        )}
+                        {customer.address && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            {customer.address}
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center space-x-4 text-xs text-bizNeutral-500 mt-1">
-                        <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          Last contact: {customer.lastContact}
+                      
+                      <div className="mt-2 flex items-center gap-4 text-sm">
+                        <span className="text-bizNeutral-600">
+                          Total Spent: <span className="font-medium text-bizNeutral-900">${customer.totalSpent.toLocaleString()}</span>
                         </span>
-                        {customer.value > 0 && (
-                          <span className="flex items-center">
-                            <DollarSign className="h-3 w-3 mr-1" />
-                            Value: ${customer.value.toLocaleString()}
-                          </span>
-                        )}
+                        <span className="text-bizNeutral-600">
+                          Last Contact: <span className="font-medium text-bizNeutral-900">{customer.lastContact}</span>
+                        </span>
                       </div>
+                      
+                      {customer.notes && (
+                        <div className="mt-2 text-sm text-bizNeutral-600">
+                          <span className="font-medium">Notes:</span> {customer.notes}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Select 
-                      value={customer.status} 
-                      onValueChange={(value: Customer['status']) => handleUpdateStatus(customer.id, value)}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="prospect">Prospect</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedCustomer(customer)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Customer Details</DialogTitle>
-                          <DialogDescription>View and edit customer information</DialogDescription>
-                        </DialogHeader>
-                        {selectedCustomer && (
-                          <Tabs defaultValue="details" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
-                              <TabsTrigger value="details">Details</TabsTrigger>
-                              <TabsTrigger value="notes">Notes</TabsTrigger>
-                              <TabsTrigger value="history">History</TabsTrigger>
-                            </TabsList>
-                            
-                            <TabsContent value="details" className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label>Name</Label>
-                                  <Input value={selectedCustomer.name} readOnly />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Email</Label>
-                                  <Input value={selectedCustomer.email} readOnly />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Phone</Label>
-                                  <Input value={selectedCustomer.phone} readOnly />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Company</Label>
-                                  <Input value={selectedCustomer.company} readOnly />
-                                </div>
-                                <div className="col-span-2 space-y-2">
-                                  <Label>Address</Label>
-                                  <Input value={selectedCustomer.address} readOnly />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Status</Label>
-                                  <Input value={selectedCustomer.status} readOnly />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>Customer Value</Label>
-                                  <Input value={`$${selectedCustomer.value.toLocaleString()}`} readOnly />
-                                </div>
-                              </div>
-                            </TabsContent>
-                            
-                            <TabsContent value="notes" className="space-y-4">
-                              <div className="space-y-2">
-                                <Label>Customer Notes</Label>
-                                <Textarea
-                                  value={selectedCustomer.notes}
-                                  readOnly
-                                  rows={6}
-                                  className="resize-none"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Tags</Label>
-                                <div className="flex flex-wrap gap-2">
-                                  {selectedCustomer.tags.map((tag, index) => (
-                                    <Badge key={index} variant="outline">
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            </TabsContent>
-                            
-                            <TabsContent value="history" className="space-y-4">
-                              <div className="text-center text-bizNeutral-500 py-8">
-                                <Calendar className="h-12 w-12 mx-auto mb-4 text-bizNeutral-300" />
-                                <p>Interaction history coming soon!</p>
-                                <p className="text-sm">Track emails, calls, and meetings with this customer.</p>
-                              </div>
-                            </TabsContent>
-                          </Tabs>
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleDeleteCustomer(customer.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-bizError hover:text-bizError">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
-              
-              {filteredCustomers.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-bizNeutral-300" />
-                  <p className="text-bizNeutral-500">No customers found matching your criteria.</p>
-                  <p className="text-sm text-bizNeutral-400">Try adjusting your search or filter settings.</p>
-                </div>
-              )}
             </div>
+            
+            {filteredCustomers.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-bizNeutral-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-bizNeutral-900 mb-2">No customers found</h3>
+                <p className="text-bizNeutral-600">Try adjusting your search or filters</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
