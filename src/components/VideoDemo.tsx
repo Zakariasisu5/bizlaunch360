@@ -154,7 +154,7 @@ const VideoDemo: React.FC<VideoDemoProps> = ({ trigger }) => {
                     max={duration || 0}
                     value={currentTime}
                     onChange={handleSeek}
-                    className="flex-1 h-1 bg-white/20 rounded-full appearance-none cursor-pointer slider"
+                    className="flex-1 h-1 bg-white/20 rounded-full cursor-pointer slider-custom"
                     style={{
                       background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, rgba(255,255,255,0.2) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.2) 100%)`
                     }}
@@ -168,24 +168,26 @@ const VideoDemo: React.FC<VideoDemoProps> = ({ trigger }) => {
           </div>
         </div>
         
-        <style jsx>{`
-          .slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-          }
-          .slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            cursor: pointer;
-            border: none;
-          }
-        `}</style>
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .slider-custom::-webkit-slider-thumb {
+              appearance: none;
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              background: #3b82f6;
+              cursor: pointer;
+            }
+            .slider-custom::-moz-range-thumb {
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              background: #3b82f6;
+              cursor: pointer;
+              border: none;
+            }
+          `
+        }} />
       </DialogContent>
     </Dialog>
   );
