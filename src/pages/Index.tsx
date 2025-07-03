@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import {
   Trophy,
   TrendingUp
 } from 'lucide-react';
+import VideoDemo from '@/components/VideoDemo';
 
 const features = [
   {
@@ -119,8 +119,8 @@ const Index = () => {
                     Start Free Trial
                   </Button>
                 </Link>
-                <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
-                  <DialogTrigger asChild>
+                <VideoDemo
+                  trigger={
                     <Button 
                       size="lg" 
                       variant="outline" 
@@ -129,22 +129,8 @@ const Index = () => {
                       <Play className="mr-2 h-5 w-5" />
                       Watch Demo
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl w-full bg-white">
-                    <div className="relative w-full aspect-video bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl overflow-hidden">
-                      <img 
-                        src="/lovable-uploads/342ce04e-04df-45ac-9400-e8fd47701354.png" 
-                        alt="BizLaunch360 Dashboard Demo"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                          <Play className="w-6 h-6 text-white ml-1" />
-                        </div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                  }
+                />
               </div>
             </div>
 
