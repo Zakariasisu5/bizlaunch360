@@ -17,6 +17,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import VideoDemo from '@/components/VideoDemo';
+import AIAssistant from '@/components/AIAssistant';
 
 const features = [
   {
@@ -289,6 +290,9 @@ const Index = () => {
           </div>
         </div>
       </footer>
+      
+      {/* AI Assistant */}
+      <AIAssistant />
     </div>
   );
 };
