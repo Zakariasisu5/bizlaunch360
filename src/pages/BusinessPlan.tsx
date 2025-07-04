@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   FileText, 
   Sparkles, 
@@ -18,14 +19,26 @@ import {
   DollarSign,
   Users,
   TrendingUp,
-  Lightbulb
+  Lightbulb,
+  FolderOpen,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { generateBusinessPlanPDF } from '@/utils/pdfGenerator';
+import { saveBusinessPlan, loadBusinessPlans, deleteBusinessPlan, loadBusinessPlan, BusinessPlanData } from '@/utils/businessPlanStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const BusinessPlan = () => {
+  const { toast: showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [planData, setPlanData] = useState({
+  const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [savedPlans, setSavedPlans] = useState<BusinessPlanData[]>([]);
+  const [showSavedPlans, setShowSavedPlans] = useState(false);
+  const [planTitle, setPlanTitle] = useState('');
+  const [planData, setPlanData] = useState<BusinessPlanData>({
     executiveSummary: '',
     businessDescription: '',
     marketAnalysis: '',
@@ -42,6 +55,25 @@ const BusinessPlan = () => {
     { id: 3, title: 'Financial Planning', icon: DollarSign },
     { id: 4, title: 'Strategy & Growth', icon: TrendingUp }
   ];
+
+  // Load saved plans on component mount
+  useEffect(() => {
+    loadSavedPlans();
+  }, []);
+
+  const loadSavedPlans = async () => {
+    try {
+      const plans = await loadBusinessPlans();
+      setSavedPlans(plans);
+    } catch (error) {
+      console.error('Error loading saved plans:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to load saved business plans",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleGenerateWithAI = async () => {
     setIsGenerating(true);
@@ -205,15 +237,152 @@ Break-even Analysis:
     toast.success('AI business plan generated successfully!');
   };
 
-  const handleSave = () => {
-    // Save to localStorage or backend
-    localStorage.setItem('businessPlan', JSON.stringify(planData));
-    toast.success('Business plan saved successfully!');
+  const handleSave = async () => {
+    if (!planTitle.trim()) {
+      showToast({
+        title: "Title Required",
+        description: "Please enter a title for your business plan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const planToSave = {
+        ...planData,
+        id: currentPlanId || undefined,
+        title: planTitle.trim()
+      };
+
+      const savedPlan = await saveBusinessPlan(planToSave);
+      setCurrentPlanId(savedPlan.id!);
+      
+      showToast({
+        title: "Success",
+        description: "Business plan saved successfully!",
+        variant: "default"
+      });
+      
+      await loadSavedPlans();
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to save business plan. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDownloadPDF = () => {
-    // Generate and download PDF
-    toast.success('PDF download started!');
+  const handleDownloadPDF = async () => {
+    if (!planTitle.trim()) {
+      showToast({
+        title: "Title Required",
+        description: "Please enter a title before generating PDF",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      await generateBusinessPlanPDF({
+        ...planData,
+        title: planTitle
+      });
+      
+      showToast({
+        title: "Success",
+        description: "PDF generated and downloaded successfully!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleLoadPlan = async (planId: string) => {
+    try {
+      const plan = await loadBusinessPlan(planId);
+      setPlanData(plan);
+      setPlanTitle(plan.title || '');
+      setCurrentPlanId(plan.id!);
+      setShowSavedPlans(false);
+      
+      showToast({
+        title: "Success",
+        description: "Business plan loaded successfully!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error loading plan:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to load business plan",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeletePlan = async (planId: string) => {
+    try {
+      await deleteBusinessPlan(planId);
+      await loadSavedPlans();
+      
+      if (currentPlanId === planId) {
+        setCurrentPlanId(null);
+        setPlanTitle('');
+        setPlanData({
+          executiveSummary: '',
+          businessDescription: '',
+          marketAnalysis: '',
+          organization: '',
+          products: '',
+          marketing: '',
+          funding: '',
+          financials: ''
+        });
+      }
+      
+      showToast({
+        title: "Success",
+        description: "Business plan deleted successfully!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to delete business plan",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleNewPlan = () => {
+    setCurrentPlanId(null);
+    setPlanTitle('');
+    setPlanData({
+      executiveSummary: '',
+      businessDescription: '',
+      marketAnalysis: '',
+      organization: '',
+      products: '',
+      marketing: '',
+      funding: '',
+      financials: ''
+    });
+    setCurrentStep(1);
   };
 
   const progressPercentage = (currentStep / 4) * 100;
@@ -228,16 +397,83 @@ Break-even Analysis:
             <p className="text-bizNeutral-600 mt-2">Create a comprehensive business plan with AI assistance</p>
           </div>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-            <Button variant="outline" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Draft
+            <Dialog open={showSavedPlans} onOpenChange={setShowSavedPlans}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Load Plan
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Saved Business Plans</DialogTitle>
+                  <DialogDescription>
+                    Load or manage your saved business plans
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {savedPlans.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No saved business plans yet</p>
+                  ) : (
+                    savedPlans.map((plan) => (
+                      <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <h3 className="font-medium">{plan.title}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Updated: {new Date(plan.updatedAt!).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleLoadPlan(plan.id!)}
+                          >
+                            Load
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeletePlan(plan.id!)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" onClick={handleNewPlan}>
+              <FileText className="h-4 w-4 mr-2" />
+              New Plan
             </Button>
-            <Button onClick={handleDownloadPDF}>
+            <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? 'Saving...' : 'Save Draft'}
+            </Button>
+            <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF}>
               <Download className="h-4 w-4 mr-2" />
-              Download PDF
+              {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
             </Button>
           </div>
         </div>
+
+        {/* Plan Title Input */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <Label htmlFor="planTitle">Business Plan Title</Label>
+              <Input
+                id="planTitle"
+                placeholder="Enter a title for your business plan..."
+                value={planTitle}
+                onChange={(e) => setPlanTitle(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* AI Generator Card */}
         <Card className="gradient-card border-2 border-bizPrimary/20">
