@@ -21,12 +21,14 @@ import {
   TrendingUp,
   Lightbulb,
   FolderOpen,
-  Trash2
+  Trash2,
+  LogIn
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBusinessPlanPDF } from '@/utils/pdfGenerator';
 import { saveBusinessPlan, loadBusinessPlans, deleteBusinessPlan, loadBusinessPlan, BusinessPlanData } from '@/utils/businessPlanStorage';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const BusinessPlan = () => {
   const { toast: showToast } = useToast();
@@ -38,6 +40,8 @@ const BusinessPlan = () => {
   const [savedPlans, setSavedPlans] = useState<BusinessPlanData[]>([]);
   const [showSavedPlans, setShowSavedPlans] = useState(false);
   const [planTitle, setPlanTitle] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [planData, setPlanData] = useState<BusinessPlanData>({
     executiveSummary: '',
     businessDescription: '',
@@ -56,22 +60,46 @@ const BusinessPlan = () => {
     { id: 4, title: 'Strategy & Growth', icon: TrendingUp }
   ];
 
-  // Load saved plans on component mount
+  // Check authentication status on mount
   useEffect(() => {
-    loadSavedPlans();
+    checkAuthStatus();
   }, []);
 
+  // Load saved plans only if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadSavedPlans();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuthStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
   const loadSavedPlans = async () => {
+    if (!isAuthenticated) return;
+    
     try {
       const plans = await loadBusinessPlans();
       setSavedPlans(plans);
     } catch (error) {
       console.error('Error loading saved plans:', error);
-      showToast({
-        title: "Error",
-        description: "Failed to load saved business plans",
-        variant: "destructive"
-      });
+      // Don't show error toast for auth issues, just log
+      if (error instanceof Error && !error.message.includes('authenticated')) {
+        showToast({
+          title: "Error",
+          description: "Failed to load saved business plans",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -401,7 +429,11 @@ Break-even Analysis:
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center md:justify-start">
             <Dialog open={showSavedPlans} onOpenChange={setShowSavedPlans}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full sm:w-auto">
+                <Button 
+                  variant="outline" 
+                  className="w-full sm:w-auto" 
+                  disabled={!isAuthenticated}
+                >
                   <FolderOpen className="h-4 w-4 mr-2" />
                   Load Plan
                 </Button>
@@ -410,11 +442,24 @@ Break-even Analysis:
                 <DialogHeader>
                   <DialogTitle>Saved Business Plans</DialogTitle>
                   <DialogDescription>
-                    Load or manage your saved business plans
+                    {isAuthenticated ? 
+                      "Load or manage your saved business plans" :
+                      "Sign in to access your saved business plans"
+                    }
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-                  {savedPlans.length === 0 ? (
+                  {!isAuthenticated ? (
+                    <div className="text-center py-8 space-y-4">
+                      <LogIn className="h-12 w-12 mx-auto text-muted-foreground" />
+                      <div>
+                        <p className="text-muted-foreground">Please sign in to save and load business plans</p>
+                        <Button variant="outline" className="mt-3" onClick={() => setShowSavedPlans(false)}>
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  ) : savedPlans.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No saved business plans yet</p>
                   ) : (
                     savedPlans.map((plan) => (
@@ -455,7 +500,13 @@ Break-even Analysis:
               New Plan
             </Button>
             
-            <Button variant="outline" onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
+            <Button 
+              variant="outline" 
+              onClick={handleSave} 
+              disabled={isSaving || !isAuthenticated} 
+              className="w-full sm:w-auto"
+              title={!isAuthenticated ? "Sign in to save business plans" : ""}
+            >
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Draft'}
             </Button>
@@ -467,7 +518,26 @@ Break-even Analysis:
           </div>
         </div>
 
-        {/* Plan Title Input */}
+          {/* Authentication Status Notice */}
+          {!isAuthenticated && (
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/10 dark:border-amber-800">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <LogIn className="h-5 w-5 text-amber-600" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Sign in to save and load business plans
+                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                      You can still create and export business plans without signing in
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Plan Title Input */}
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
