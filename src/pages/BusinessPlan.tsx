@@ -389,45 +389,48 @@ Break-even Analysis:
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-7xl">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-bizNeutral-900">Business Plan Generator</h1>
-            <p className="text-bizNeutral-600 mt-2">Create a comprehensive business plan with AI assistance</p>
+        <div className="space-y-4">
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold text-bizNeutral-900">Business Plan Generator</h1>
+            <p className="text-bizNeutral-600 mt-2 text-sm md:text-base">Create a comprehensive business plan with AI assistance</p>
           </div>
-          <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+          
+          {/* Action Buttons - Mobile First */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center md:justify-start">
             <Dialog open={showSavedPlans} onOpenChange={setShowSavedPlans}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <FolderOpen className="h-4 w-4 mr-2" />
                   Load Plan
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="mx-4 max-w-2xl max-h-[90vh] overflow-hidden">
                 <DialogHeader>
                   <DialogTitle>Saved Business Plans</DialogTitle>
                   <DialogDescription>
                     Load or manage your saved business plans
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                   {savedPlans.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No saved business plans yet</p>
                   ) : (
                     savedPlans.map((plan) => (
-                      <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <h3 className="font-medium">{plan.title}</h3>
-                          <p className="text-sm text-muted-foreground">
+                      <div key={plan.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg space-y-2 sm:space-y-0">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium truncate">{plan.title}</h3>
+                          <p className="text-xs text-muted-foreground">
                             Updated: {new Date(plan.updatedAt!).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 shrink-0">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleLoadPlan(plan.id!)}
+                            className="flex-1 sm:flex-none"
                           >
                             Load
                           </Button>
@@ -435,6 +438,7 @@ Break-even Analysis:
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeletePlan(plan.id!)}
+                            className="px-2"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -445,15 +449,18 @@ Break-even Analysis:
                 </div>
               </DialogContent>
             </Dialog>
-            <Button variant="outline" onClick={handleNewPlan}>
+            
+            <Button variant="outline" onClick={handleNewPlan} className="w-full sm:w-auto">
               <FileText className="h-4 w-4 mr-2" />
               New Plan
             </Button>
-            <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+            
+            <Button variant="outline" onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Draft'}
             </Button>
-            <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF}>
+            
+            <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF} className="w-full sm:w-auto btn-primary">
               <Download className="h-4 w-4 mr-2" />
               {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
             </Button>
@@ -516,70 +523,76 @@ Break-even Analysis:
         </Card>
 
         {/* Business Plan Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Navigation */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
+          {/* Navigation - Mobile Horizontal Scroll */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <Card className="sticky top-4">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Plan Sections</CardTitle>
                 <Progress value={progressPercentage} className="w-full" />
               </CardHeader>
               <CardContent className="space-y-2">
-                {steps.map((step) => {
-                  const Icon = step.icon;
-                  return (
-                    <Button
-                      key={step.id}
-                      variant={currentStep === step.id ? "default" : "ghost"}
-                      className="w-full justify-start"
-                      onClick={() => setCurrentStep(step.id)}
-                    >
-                      <Icon className="h-4 w-4 mr-2" />
-                      {step.title}
-                    </Button>
-                  );
-                })}
+                {/* Mobile: Horizontal scroll, Desktop: Vertical stack */}
+                <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
+                  {steps.map((step) => {
+                    const Icon = step.icon;
+                    return (
+                      <Button
+                        key={step.id}
+                        variant={currentStep === step.id ? "default" : "ghost"}
+                        className="flex-shrink-0 lg:flex-shrink lg:w-full lg:justify-start whitespace-nowrap lg:whitespace-normal"
+                        onClick={() => setCurrentStep(step.id)}
+                      >
+                        <Icon className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline lg:inline">{step.title}</span>
+                        <span className="sm:hidden lg:hidden">{step.id}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Content */}
-          <div className="lg:col-span-3">
+          {/* Content - Always visible, better mobile spacing */}
+          <div className="lg:col-span-3 order-1 lg:order-2">
             <Tabs value="edit" className="w-full">
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="edit">Edit Plan</TabsTrigger>
                 <TabsTrigger value="preview">Preview</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="edit" className="space-y-6">
+              <TabsContent value="edit" className="mt-6 space-y-6">
                 {currentStep === 1 && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Executive Summary</CardTitle>
-                        <CardDescription>A brief overview of your business concept and key success factors</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Executive Summary</CardTitle>
+                        <CardDescription className="text-sm">A brief overview of your business concept and key success factors</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Describe your business concept, mission, and key success factors..."
                           value={planData.executiveSummary}
                           onChange={(e) => setPlanData({ ...planData, executiveSummary: e.target.value })}
-                          rows={8}
+                          rows={6}
+                          className="min-h-[120px] text-sm"
                         />
                       </CardContent>
                     </Card>
 
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Business Description</CardTitle>
-                        <CardDescription>Detailed description of your business, products, and services</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Business Description</CardTitle>
+                        <CardDescription className="text-sm">Detailed description of your business, products, and services</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Provide detailed information about your business, what you offer, and your target market..."
                           value={planData.businessDescription}
                           onChange={(e) => setPlanData({ ...planData, businessDescription: e.target.value })}
-                          rows={10}
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                       </CardContent>
                     </Card>
@@ -587,33 +600,35 @@ Break-even Analysis:
                 )}
 
                 {currentStep === 2 && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Market Analysis</CardTitle>
-                        <CardDescription>Analysis of your target market, competition, and industry trends</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Market Analysis</CardTitle>
+                        <CardDescription className="text-sm">Analysis of your target market, competition, and industry trends</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Analyze your target market, competitors, market size, and industry trends..."
                           value={planData.marketAnalysis}
                           onChange={(e) => setPlanData({ ...planData, marketAnalysis: e.target.value })}
-                          rows={10}
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                       </CardContent>
                     </Card>
 
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Organization & Management</CardTitle>
-                        <CardDescription>Your organizational structure and key team members</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Organization & Management</CardTitle>
+                        <CardDescription className="text-sm">Your organizational structure and key team members</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Describe your organizational structure, key team members, and their roles..."
                           value={planData.organization}
                           onChange={(e) => setPlanData({ ...planData, organization: e.target.value })}
-                          rows={8}
+                          rows={6}
+                          className="min-h-[120px] text-sm"
                         />
                       </CardContent>
                     </Card>
@@ -621,33 +636,35 @@ Break-even Analysis:
                 )}
 
                 {currentStep === 3 && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Funding Request</CardTitle>
-                        <CardDescription>Your funding requirements and how you plan to use the funds</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Funding Request</CardTitle>
+                        <CardDescription className="text-sm">Your funding requirements and how you plan to use the funds</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Describe your funding needs, sources, and planned use of funds..."
                           value={planData.funding}
                           onChange={(e) => setPlanData({ ...planData, funding: e.target.value })}
-                          rows={8}
+                          rows={6}
+                          className="min-h-[120px] text-sm"
                         />
                       </CardContent>
                     </Card>
 
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Financial Projections</CardTitle>
-                        <CardDescription>Revenue forecasts, expense projections, and profitability analysis</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Financial Projections</CardTitle>
+                        <CardDescription className="text-sm">Revenue forecasts, expense projections, and profitability analysis</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Include revenue projections, expense forecasts, break-even analysis, and cash flow statements..."
                           value={planData.financials}
                           onChange={(e) => setPlanData({ ...planData, financials: e.target.value })}
-                          rows={10}
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                       </CardContent>
                     </Card>
@@ -655,117 +672,121 @@ Break-even Analysis:
                 )}
 
                 {currentStep === 4 && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Products & Services</CardTitle>
-                        <CardDescription>Detailed description of your offerings and pricing strategy</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Products & Services</CardTitle>
+                        <CardDescription className="text-sm">Detailed description of your offerings and pricing strategy</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Describe your products or services, pricing strategy, and competitive advantages..."
                           value={planData.products}
                           onChange={(e) => setPlanData({ ...planData, products: e.target.value })}
-                          rows={8}
+                          rows={6}
+                          className="min-h-[120px] text-sm"
                         />
                       </CardContent>
                     </Card>
 
                     <Card>
-                      <CardHeader>
-                        <CardTitle>Marketing & Sales Strategy</CardTitle>
-                        <CardDescription>How you plan to attract and retain customers</CardDescription>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Marketing & Sales Strategy</CardTitle>
+                        <CardDescription className="text-sm">How you plan to attract and retain customers</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           placeholder="Outline your marketing strategy, sales process, and customer acquisition plans..."
                           value={planData.marketing}
                           onChange={(e) => setPlanData({ ...planData, marketing: e.target.value })}
-                          rows={8}
+                          rows={6}
+                          className="min-h-[120px] text-sm"
                         />
                       </CardContent>
                     </Card>
                   </div>
                 )}
 
-                <div className="flex justify-between">
+                {/* Navigation Buttons - Better mobile layout */}
+                <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t">
                   <Button
                     variant="outline"
                     onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
                     disabled={currentStep === 1}
+                    className="w-full sm:w-auto order-2 sm:order-1"
                   >
                     Previous
                   </Button>
                   <Button
                     onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
                     disabled={currentStep === 4}
-                    className="btn-primary"
+                    className="w-full sm:w-auto btn-primary order-1 sm:order-2"
                   >
                     Next
                   </Button>
                 </div>
               </TabsContent>
 
-              <TabsContent value="preview">
+              <TabsContent value="preview" className="mt-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Business Plan Preview</CardTitle>
-                    <CardDescription>Review your complete business plan</CardDescription>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg sm:text-xl">Business Plan Preview</CardTitle>
+                    <CardDescription className="text-sm">Review your complete business plan</CardDescription>
                   </CardHeader>
-                  <CardContent className="prose max-w-none">
-                    <div className="space-y-8">
+                  <CardContent className="prose prose-sm sm:prose max-w-none">
+                    <div className="space-y-6 sm:space-y-8">
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Executive Summary</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Executive Summary</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.executiveSummary || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Business Description</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Business Description</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.businessDescription || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Market Analysis</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Market Analysis</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.marketAnalysis || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Organization & Management</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Organization & Management</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.organization || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Products & Services</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Products & Services</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.products || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Marketing & Sales</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Marketing & Sales</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.marketing || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Funding Request</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Funding Request</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.funding || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-xl font-bold text-bizNeutral-900 mb-4">Financial Projections</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700">
+                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Financial Projections</h2>
+                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
                           {planData.financials || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
