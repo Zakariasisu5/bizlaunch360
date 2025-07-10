@@ -22,7 +22,9 @@ import {
   Lightbulb,
   FolderOpen,
   Trash2,
-  LogIn
+  LogIn,
+  Copy,
+  Link
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBusinessPlanPDF } from '@/utils/pdfGenerator';
@@ -368,18 +370,7 @@ Break-even Analysis:
       await loadSavedPlans();
       
       if (currentPlanId === planId) {
-        setCurrentPlanId(null);
-        setPlanTitle('');
-        setPlanData({
-          executiveSummary: '',
-          businessDescription: '',
-          marketAnalysis: '',
-          organization: '',
-          products: '',
-          marketing: '',
-          funding: '',
-          financials: ''
-        });
+        handleNewPlan();
       }
       
       showToast({
@@ -391,7 +382,36 @@ Break-even Analysis:
       console.error('Error deleting plan:', error);
       showToast({
         title: "Error",
-        description: "Failed to delete business plan",
+        description: "Failed to delete business plan. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!currentPlanId) {
+      showToast({
+        title: "No Plan Selected",
+        description: "Please save the plan first to generate a shareable link",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const shareUrl = `${window.location.origin}/business-plan/share/${currentPlanId}`;
+      await navigator.clipboard.writeText(shareUrl);
+      
+      showToast({
+        title: "Link Copied",
+        description: "Shareable link copied to clipboard!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error copying link:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to copy link. Please try again.",
         variant: "destructive"
       });
     }
@@ -509,6 +529,17 @@ Break-even Analysis:
             >
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Draft'}
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={handleCopyLink} 
+              disabled={!currentPlanId || !isAuthenticated}
+              className="w-full sm:w-auto"
+              title={!currentPlanId ? "Save the plan first to get a shareable link" : !isAuthenticated ? "Sign in to copy link" : ""}
+            >
+              <Link className="h-4 w-4 mr-2" />
+              Copy Link
             </Button>
             
             <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF} className="w-full sm:w-auto btn-primary">

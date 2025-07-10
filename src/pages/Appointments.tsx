@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,97 +19,79 @@ import {
   CheckCircle,
   XCircle,
   Settings,
-  ExternalLink
+  ExternalLink,
+  LogIn
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Appointment {
-  id: string;
-  title: string;
-  customer: string;
-  email: string;
-  phone: string;
-  date: string;
-  time: string;
-  duration: number;
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
-  service: string;
-  notes?: string;
-}
-
-interface Service {
-  id: string;
-  name: string;
-  duration: number;
-  price: number;
-  description: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  saveAppointment, 
+  loadAppointments, 
+  updateAppointmentStatus, 
+  deleteAppointment,
+  saveService,
+  loadServices,
+  deleteService,
+  AppointmentData,
+  ServiceData
+} from '@/utils/appointmentStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const Appointments = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: '1',
-      title: 'Consultation Call',
-      customer: 'John Smith',
-      email: 'john@example.com',
-      phone: '+1 (555) 123-4567',
-      date: '2024-01-25',
-      time: '10:00',
-      duration: 60,
-      status: 'confirmed',
-      service: 'Business Consultation',
-      notes: 'Initial consultation for new project'
-    },
-    {
-      id: '2',
-      title: 'Strategy Session',
-      customer: 'Sarah Johnson',
-      email: 'sarah@company.com',
-      phone: '+1 (555) 987-6543',
-      date: '2024-01-25',
-      time: '14:30',
-      duration: 90,
-      status: 'pending',
-      service: 'Strategy Planning',
-      notes: 'Review quarterly goals and planning'
-    },
-    {
-      id: '3',
-      title: 'Follow-up Meeting',
-      customer: 'Mike Davis',
-      email: 'mike@startup.com',
-      phone: '+1 (555) 456-7890',
-      date: '2024-01-26',
-      time: '09:00',
-      duration: 45,
-      status: 'confirmed',
-      service: 'Follow-up Session'
-    }
-  ]);
+  const { toast: showToast } = useToast();
+  const [appointments, setAppointments] = useState<AppointmentData[]>([]);
+  const [services, setServices] = useState<ServiceData[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      name: 'Business Consultation',
-      duration: 60,
-      price: 150,
-      description: 'Initial consultation to understand your business needs'
-    },
-    {
-      id: '2',
-      name: 'Strategy Planning',
-      duration: 90,
-      price: 200,
-      description: 'Comprehensive strategy planning session'
-    },
-    {
-      id: '3',
-      name: 'Follow-up Session',
-      duration: 45,
-      price: 100,
-      description: 'Follow-up meeting to track progress'
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  // Load data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    } else {
+      setIsLoading(false);
     }
-  ]);
+  }, [isAuthenticated]);
+
+  const checkAuthStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      setIsAuthenticated(false);
+    }
+  };
+
+  const loadData = async () => {
+    if (!isAuthenticated) return;
+    
+    setIsLoading(true);
+    try {
+      const [appointmentsData, servicesData] = await Promise.all([
+        loadAppointments(),
+        loadServices()
+      ]);
+      setAppointments(appointmentsData);
+      setServices(servicesData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      if (error instanceof Error && !error.message.includes('authenticated')) {
+        showToast({
+          title: "Error",
+          description: "Failed to load appointment data",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [newAppointment, setNewAppointment] = useState({
     customer: '',
@@ -129,18 +110,19 @@ const Appointments = () => {
     description: ''
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'bg-bizSuccess text-white';
-      case 'pending': return 'bg-bizWarning text-white';
-      case 'cancelled': return 'bg-bizError text-white';
-      case 'completed': return 'bg-bizNeutral-500 text-white';
-      default: return 'bg-bizNeutral-200 text-bizNeutral-800';
-    }
-  };
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleCreateAppointment = () => {
-    if (!newAppointment.customer || !newAppointment.date || !newAppointment.time || !newAppointment.service) {
+  const handleCreateAppointment = async () => {
+    if (!isAuthenticated) {
+      showToast({
+        title: "Authentication Required",
+        description: "Please sign in to create appointments",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!newAppointment.customer || !newAppointment.email || !newAppointment.date || !newAppointment.time || !newAppointment.service) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -151,61 +133,140 @@ const Appointments = () => {
       return;
     }
 
-    const appointment: Appointment = {
-      id: Date.now().toString(),
-      title: selectedService.name,
-      customer: newAppointment.customer,
-      email: newAppointment.email,
-      phone: newAppointment.phone,
-      date: newAppointment.date,
-      time: newAppointment.time,
-      duration: selectedService.duration,
-      status: 'confirmed',
-      service: selectedService.name,
-      notes: newAppointment.notes
-    };
+    setIsSaving(true);
+    try {
+      const appointmentData: AppointmentData = {
+        title: selectedService.name,
+        customerName: newAppointment.customer,
+        customerEmail: newAppointment.email,
+        customerPhone: newAppointment.phone,
+        appointmentDate: newAppointment.date,
+        appointmentTime: newAppointment.time,
+        duration: selectedService.duration,
+        status: 'confirmed',
+        serviceName: selectedService.name,
+        notes: newAppointment.notes
+      };
 
-    setAppointments([appointment, ...appointments]);
-    setNewAppointment({
-      customer: '',
-      email: '',
-      phone: '',
-      date: '',
-      time: '',
-      service: '',
-      notes: ''
-    });
-    toast.success('Appointment created successfully!');
+      await saveAppointment(appointmentData);
+      await loadData();
+      
+      setNewAppointment({
+        customer: '',
+        email: '',
+        phone: '',
+        date: '',
+        time: '',
+        service: '',
+        notes: ''
+      });
+      
+      showToast({
+        title: "Success",
+        description: "Appointment created successfully!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to create appointment",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleCreateService = () => {
+  const handleCreateService = async () => {
+    if (!isAuthenticated) {
+      showToast({
+        title: "Authentication Required",
+        description: "Please sign in to create services",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!newService.name || !newService.duration || !newService.price) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const service: Service = {
-      id: Date.now().toString(),
-      name: newService.name,
-      duration: parseInt(newService.duration),
-      price: parseFloat(newService.price),
-      description: newService.description
-    };
+    try {
+      const serviceData: ServiceData = {
+        name: newService.name,
+        duration: parseInt(newService.duration),
+        price: parseFloat(newService.price),
+        description: newService.description
+      };
 
-    setServices([...services, service]);
-    setNewService({ name: '', duration: '', price: '', description: '' });
-    toast.success('Service created successfully!');
+      await saveService(serviceData);
+      await loadData();
+      
+      setNewService({ name: '', duration: '', price: '', description: '' });
+      
+      showToast({
+        title: "Success",
+        description: "Service created successfully!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error creating service:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to create service",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleStatusChange = (appointmentId: string, newStatus: 'confirmed' | 'pending' | 'cancelled' | 'completed') => {
-    setAppointments(appointments.map(apt => 
-      apt.id === appointmentId ? { ...apt, status: newStatus } : apt
-    ));
-    toast.success(`Appointment status updated to ${newStatus}!`);
+  const handleStatusChange = async (appointmentId: string, newStatus: 'confirmed' | 'pending' | 'cancelled' | 'completed') => {
+    if (!isAuthenticated) return;
+    
+    try {
+      await updateAppointmentStatus(appointmentId, newStatus);
+      await loadData();
+      toast.success(`Appointment status updated to ${newStatus}!`);
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to update appointment status",
+        variant: "destructive"
+      });
+    }
   };
 
-  const todayAppointments = appointments.filter(apt => apt.date === new Date().toISOString().split('T')[0]);
-  const upcomingAppointments = appointments.filter(apt => new Date(apt.date) > new Date());
+  const todayAppointments = appointments.filter(apt => apt.appointmentDate === new Date().toISOString().split('T')[0]);
+  const upcomingAppointments = appointments.filter(apt => new Date(apt.appointmentDate) > new Date());
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading appointments...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-4">
+            <LogIn className="h-12 w-12 mx-auto text-muted-foreground" />
+            <h2 className="text-2xl font-bold">Authentication Required</h2>
+            <p className="text-muted-foreground">Please sign in to manage your appointments</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -300,9 +361,9 @@ const Appointments = () => {
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="btn-primary">
+                <Button disabled={!isAuthenticated}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Book Appointment
+                  New Appointment
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
@@ -321,7 +382,7 @@ const Appointments = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customer-email">Email</Label>
+                    <Label htmlFor="customer-email">Email *</Label>
                     <Input
                       id="customer-email"
                       type="email"
@@ -383,8 +444,8 @@ const Appointments = () => {
                     />
                   </div>
                 </div>
-                <Button onClick={handleCreateAppointment} className="w-full btn-primary mt-4">
-                  Book Appointment
+                <Button onClick={handleCreateAppointment} disabled={isSaving} className="w-full">
+                  {isSaving ? 'Creating...' : 'Create Appointment'}
                 </Button>
               </DialogContent>
             </Dialog>
@@ -393,212 +454,133 @@ const Appointments = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="card-hover">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">Today's Appointments</CardTitle>
-              <Calendar className="h-4 w-4 text-bizPrimary" />
+              <CardTitle className="text-sm font-medium">Today's Appointments</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{todayAppointments.length}</div>
-              <div className="text-xs text-bizNeutral-500">
+              <div className="text-2xl font-bold">{todayAppointments.length}</div>
+              <p className="text-xs text-muted-foreground">
                 {todayAppointments.filter(apt => apt.status === 'confirmed').length} confirmed
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{upcomingAppointments.length}</div>
+              <p className="text-xs text-muted-foreground">appointments scheduled</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Services</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{services.length}</div>
+              <p className="text-xs text-muted-foreground">available services</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {appointments.length > 0 
+                  ? Math.round((appointments.filter(apt => apt.status === 'completed').length / appointments.length) * 100)
+                  : 0}%
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">This Week</CardTitle>
-              <Clock className="h-4 w-4 text-bizAccent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{upcomingAppointments.length}</div>
-              <div className="text-xs text-bizNeutral-500">upcoming appointments</div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">Total Services</CardTitle>
-              <Settings className="h-4 w-4 text-bizSuccess" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{services.length}</div>
-              <div className="text-xs text-bizNeutral-500">available services</div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">Completion Rate</CardTitle>
-              <CheckCircle className="h-4 w-4 text-bizWarning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">94%</div>
-              <div className="text-xs text-bizNeutral-500">appointment completion</div>
+              <p className="text-xs text-muted-foreground">appointment completion</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Appointments List */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Appointments</CardTitle>
-                <CardDescription>Manage your scheduled appointments</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {appointments.map((appointment) => (
-                    <div key={appointment.id} className="flex items-center justify-between p-4 border border-bizNeutral-200 rounded-lg card-hover">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-bizPrimary/10 rounded-lg">
-                          <User className="h-6 w-6 text-bizPrimary" />
-                        </div>
-                        <div>
-                          <div className="font-medium text-bizNeutral-900">{appointment.customer}</div>
-                          <div className="text-sm text-bizNeutral-600">{appointment.service}</div>
-                          <div className="flex items-center space-x-4 text-xs text-bizNeutral-500 mt-1">
-                            <span className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {appointment.date}
-                            </span>
-                            <span className="flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {appointment.time} ({appointment.duration}min)
-                            </span>
-                          </div>
-                          {appointment.email && (
-                            <div className="flex items-center text-xs text-bizNeutral-500 mt-1">
-                              <Mail className="h-3 w-3 mr-1" />
-                              {appointment.email}
-                            </div>
-                          )}
-                        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Appointments</CardTitle>
+            <CardDescription>Manage your scheduled appointments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {appointments.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No appointments yet</p>
+              ) : (
+                appointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="font-medium">{appointment.title}</h3>
+                        <Badge variant={
+                          appointment.status === 'confirmed' ? 'default' :
+                          appointment.status === 'pending' ? 'secondary' :
+                          appointment.status === 'cancelled' ? 'destructive' : 'outline'
+                        }>
+                          {appointment.status}
+                        </Badge>
                       </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        <Badge className={getStatusColor(appointment.status)}>{appointment.status}</Badge>
+                      <div className="text-sm text-muted-foreground space-y-1">
                         <div className="flex items-center space-x-2">
-                          {appointment.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusChange(appointment.id, 'confirmed')}
-                              className="btn-success"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Confirm
-                            </Button>
-                          )}
-                          {appointment.status === 'confirmed' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusChange(appointment.id, 'completed')}
-                              variant="outline"
-                            >
-                              Complete
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatusChange(appointment.id, 'cancelled')}
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
+                          <User className="h-4 w-4" />
+                          <span>{appointment.customerName}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Mail className="h-4 w-4" />
+                          <span>{appointment.customerEmail}</span>
+                        </div>
+                        {appointment.customerPhone && (
+                          <div className="flex items-center space-x-2">
+                            <Phone className="h-4 w-4" />
+                            <span>{appointment.customerPhone}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>{appointment.appointmentDate} at {appointment.appointmentTime}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{appointment.duration} minutes</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Booking Link</CardTitle>
-                <CardDescription>Share this link for online bookings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-bizNeutral-50 rounded-lg">
-                    <div className="text-sm text-bizNeutral-600 mb-2">Your booking URL:</div>
-                    <div className="text-sm font-mono text-bizPrimary break-all">
-                      https://bizlaunch360.com/book/your-business
-                    </div>
-                  </div>
-                  <Button className="w-full" variant="outline">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Copy Link
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Services</CardTitle>
-                <CardDescription>Your current service offerings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {services.map((service) => (
-                    <div key={service.id} className="p-3 border border-bizNeutral-200 rounded-lg">
-                      <div className="font-medium text-bizNeutral-900">{service.name}</div>
-                      <div className="text-sm text-bizNeutral-600">{service.duration} minutes • ${service.price}</div>
-                      {service.description && (
-                        <div className="text-xs text-bizNeutral-500 mt-1">{service.description}</div>
+                      {appointment.notes && (
+                        <p className="text-sm text-muted-foreground mt-2 p-2 bg-muted rounded">
+                          {appointment.notes}
+                        </p>
                       )}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Stats</CardTitle>
-                <CardDescription>Your appointment metrics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-bizNeutral-600">Total Booked</span>
-                    <span className="font-medium">{appointments.length}</span>
+                    <div className="flex flex-col space-y-2 ml-4">
+                      <Select 
+                        value={appointment.status} 
+                        onValueChange={(value) => handleStatusChange(appointment.id!, value as any)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-bizNeutral-600">Completed</span>
-                    <span className="font-medium text-bizSuccess">
-                      {appointments.filter(apt => apt.status === 'completed').length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-bizNeutral-600">Cancelled</span>
-                    <span className="font-medium text-bizError">
-                      {appointments.filter(apt => apt.status === 'cancelled').length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-bizNeutral-600">Revenue</span>
-                    <span className="font-medium text-bizSuccess">
-                      ${appointments
-                        .filter(apt => apt.status === 'completed')
-                        .reduce((sum, apt) => {
-                          const service = services.find(s => s.name === apt.service);
-                          return sum + (service?.price || 0);
-                        }, 0)
-                        .toLocaleString()
-                      }
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
