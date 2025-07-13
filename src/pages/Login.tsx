@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,19 +11,36 @@ import { Rocket, Mail, Lock, User, Chrome } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Login = () => {
-  const { login, register, loginWithGoogle, isLoading } = useAuth();
+  const { login, register, loginWithGoogle, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.onboardingComplete) {
+        navigate('/dashboard');
+      } else {
+        navigate('/onboarding');
+      }
+    }
+  }, [user, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await login(loginData.email, loginData.password);
+    const { error } = await login(loginData.email, loginData.password);
+    
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please check your email and confirm your account');
+      } else {
+        toast.error('Login failed. Please try again.');
+      }
+    } else {
       toast.success('Welcome back!');
-      navigate('/dashboard');
-    } catch (error) {
-      toast.error('Login failed. Please try again.');
     }
   };
 
@@ -33,21 +50,31 @@ const Login = () => {
       toast.error('Passwords do not match');
       return;
     }
-    try {
-      await register(registerData.email, registerData.password, registerData.name);
-      toast.success('Account created successfully!');
-      navigate('/onboarding');
-    } catch (error) {
-      toast.error('Registration failed. Please try again.');
+    
+    if (registerData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+    
+    const { error } = await register(registerData.email, registerData.password, registerData.name);
+    
+    if (error) {
+      if (error.message.includes('User already registered')) {
+        toast.error('An account with this email already exists');
+      } else if (error.message.includes('Password should be at least')) {
+        toast.error('Password must be at least 6 characters long');
+      } else {
+        toast.error('Registration failed. Please try again.');
+      }
+    } else {
+      toast.success('Account created! Please check your email to confirm your account.');
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      toast.success('Signed in with Google!');
-      navigate('/onboarding');
-    } catch (error) {
+    const { error } = await loginWithGoogle();
+    
+    if (error) {
       toast.error('Google sign-in failed. Please try again.');
     }
   };
@@ -160,11 +187,12 @@ const Login = () => {
                       <Input
                         id="register-password"
                         type="password"
-                        placeholder="Create a password"
+                        placeholder="Create a password (min. 6 characters)"
                         className="pl-10"
                         value={registerData.password}
                         onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                         required
+                        minLength={6}
                       />
                     </div>
                   </div>

@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -12,12 +14,13 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
+  login: (email: string, password: string) => Promise<{ error?: any }>;
+  register: (email: string, password: string, name: string) => Promise<{ error?: any }>;
+  loginWithGoogle: () => Promise<{ error?: any }>;
+  logout: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,107 +35,136 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('bizlaunch_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('bizlaunch_user');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile from profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: profile?.full_name || session.user.user_metadata?.full_name || 'User',
+            businessName: profile?.business_name,
+            businessType: profile?.business_type,
+            onboardingComplete: profile?.onboarding_complete || false
+          };
+          
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+        
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if user exists in localStorage from registration
-    const existingUsers = JSON.parse(localStorage.getItem('bizlaunch_users') || '[]');
-    const existingUser = existingUsers.find((u: any) => u.email === email);
-    
-    const mockUser: User = {
-      id: '1',
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      name: existingUser ? existingUser.name : 'User',
-      businessName: existingUser?.businessName || 'Tech Solutions Inc',
-      businessType: existingUser?.businessType || 'Technology',
-      onboardingComplete: existingUser?.onboardingComplete || true
-    };
+      password,
+    });
     
-    setUser(mockUser);
-    localStorage.setItem('bizlaunch_user', JSON.stringify(mockUser));
-    setIsLoading(false);
+    if (error) {
+      setIsLoading(false);
+      return { error };
+    }
+    
+    return {};
   };
 
   const register = async (email: string, password: string, name: string) => {
-    // Simulate API call
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const redirectUrl = `${window.location.origin}/`;
     
-    const mockUser: User = {
-      id: '1',
+    const { error } = await supabase.auth.signUp({
       email,
-      name,
-      onboardingComplete: false
-    };
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: name
+        }
+      }
+    });
     
-    // Store user data for future login
-    const existingUsers = JSON.parse(localStorage.getItem('bizlaunch_users') || '[]');
-    const updatedUsers = existingUsers.filter((u: any) => u.email !== email);
-    updatedUsers.push(mockUser);
-    localStorage.setItem('bizlaunch_users', JSON.stringify(updatedUsers));
+    if (error) {
+      setIsLoading(false);
+      return { error };
+    }
     
-    setUser(mockUser);
-    localStorage.setItem('bizlaunch_user', JSON.stringify(mockUser));
-    setIsLoading(false);
+    return {};
   };
 
   const loginWithGoogle = async () => {
-    // Simulate Google OAuth
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const redirectUrl = `${window.location.origin}/`;
     
-    const mockUser: User = {
-      id: '1',
-      email: 'user@gmail.com',
-      name: 'Google User',
-      onboardingComplete: false
-    };
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    });
     
-    setUser(mockUser);
-    localStorage.setItem('bizlaunch_user', JSON.stringify(mockUser));
-    setIsLoading(false);
+    if (error) {
+      setIsLoading(false);
+      return { error };
+    }
+    
+    return {};
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('bizlaunch_user');
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      localStorage.setItem('bizlaunch_user', JSON.stringify(updatedUser));
-      
-      // Also update in the users list
-      const existingUsers = JSON.parse(localStorage.getItem('bizlaunch_users') || '[]');
-      const updatedUsers = existingUsers.map((u: any) => 
-        u.email === user.email ? updatedUser : u
-      );
-      localStorage.setItem('bizlaunch_users', JSON.stringify(updatedUsers));
+  const updateUser = async (userData: Partial<User>) => {
+    if (!user || !session) return;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: userData.name,
+        business_name: userData.businessName,
+        business_type: userData.businessType,
+        onboarding_complete: userData.onboardingComplete
+      })
+      .eq('id', user.id);
+    
+    if (!error) {
+      setUser({ ...user, ...userData });
     }
   };
 
   const value: AuthContextType = {
     user,
+    session,
     isLoading,
     login,
     register,
