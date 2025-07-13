@@ -1,6 +1,4 @@
-
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,40 +15,42 @@ import {
   Bell, 
   CreditCard,
   Shield,
-  Palette,
   Upload,
   Save,
   Eye,
-  Mail,
-  Phone
+  LogIn
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
-  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
+    name: '',
+    email: '',
     phone: '',
     bio: ''
   });
 
   const [businessData, setBusinessData] = useState({
-    businessName: user?.businessName || '',
-    businessType: user?.businessType || '',
+    businessName: '',
+    businessType: '',
     website: '',
     address: '',
-    description: '',
-    logo: null as File | null
+    description: ''
   });
 
   const [invoiceSettings, setInvoiceSettings] = useState({
-    companyName: user?.businessName || '',
+    companyName: '',
     address: '',
     phone: '',
-    email: user?.email || '',
+    email: '',
     taxId: '',
     paymentTerms: '30',
     notes: 'Thank you for your business!'
@@ -64,32 +64,100 @@ const Settings = () => {
     marketingEmails: false
   });
 
-  const handleSaveProfile = () => {
-    updateUser({
-      name: profileData.name,
-      email: profileData.email
-    });
-    toast.success('Profile updated successfully!');
+  // Check authentication status and load user data
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      setUser(user);
+      
+      if (user) {
+        await loadUserSettings(user.id);
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveBusiness = () => {
-    updateUser({
-      businessName: businessData.businessName,
-      businessType: businessData.businessType
-    });
-    toast.success('Business information updated successfully!');
+  const loadUserSettings = async (userId: string) => {
+    try {
+      // Load settings from localStorage as fallback
+      const savedSettings = localStorage.getItem(`user_settings_${userId}`);
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setProfileData(settings.profile || profileData);
+        setBusinessData(settings.business || businessData);
+        setInvoiceSettings(settings.invoice || invoiceSettings);
+        setNotifications(settings.notifications || notifications);
+      }
+
+      // Set initial values from user data
+      if (user) {
+        setProfileData(prev => ({
+          ...prev,
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+          email: user.email || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user settings:', error);
+    }
   };
 
-  const handleSaveInvoice = () => {
-    // Save invoice settings to localStorage or backend
-    localStorage.setItem('invoiceSettings', JSON.stringify(invoiceSettings));
-    toast.success('Invoice settings saved successfully!');
+  const saveUserSettings = async () => {
+    if (!user) return;
+    
+    setIsSaving(true);
+    try {
+      const settings = {
+        profile: profileData,
+        business: businessData,
+        invoice: invoiceSettings,
+        notifications: notifications,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Save to localStorage
+      localStorage.setItem(`user_settings_${user.id}`, JSON.stringify(settings));
+      
+      toast({
+        title: "Success",
+        description: "Settings saved successfully!",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSaveNotifications = () => {
-    // Save notification preferences
-    localStorage.setItem('notificationSettings', JSON.stringify(notifications));
-    toast.success('Notification preferences updated successfully!');
+  const handleSaveProfile = async () => {
+    await saveUserSettings();
+  };
+
+  const handleSaveBusiness = async () => {
+    await saveUserSettings();
+  };
+
+  const handleSaveInvoice = async () => {
+    await saveUserSettings();
+  };
+
+  const handleSaveNotifications = async () => {
+    await saveUserSettings();
   };
 
   const businessTypes = [
@@ -103,6 +171,33 @@ const Settings = () => {
     'Real Estate',
     'Other'
   ];
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading settings...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-4">
+            <LogIn className="h-12 w-12 mx-auto text-muted-foreground" />
+            <h2 className="text-2xl font-bold">Authentication Required</h2>
+            <p className="text-muted-foreground">Please sign in to access settings</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -161,6 +256,7 @@ const Settings = () => {
                       type="email"
                       value={profileData.email}
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                      disabled
                     />
                   </div>
                   <div className="space-y-2">
@@ -199,9 +295,9 @@ const Settings = () => {
                   />
                 </div>
 
-                <Button onClick={handleSaveProfile} className="btn-primary">
+                <Button onClick={handleSaveProfile} disabled={isSaving} className="btn-primary">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </CardContent>
             </Card>
@@ -297,9 +393,9 @@ const Settings = () => {
                   />
                 </div>
 
-                <Button onClick={handleSaveBusiness} className="btn-primary">
+                <Button onClick={handleSaveBusiness} disabled={isSaving} className="btn-primary">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
+                  {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </CardContent>
             </Card>
@@ -409,9 +505,9 @@ const Settings = () => {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <Button onClick={handleSaveInvoice} className="btn-primary">
+                  <Button onClick={handleSaveInvoice} disabled={isSaving} className="btn-primary">
                     <Save className="h-4 w-4 mr-2" />
-                    Save Settings
+                    {isSaving ? 'Saving...' : 'Save Settings'}
                   </Button>
                   <Button variant="outline">
                     <Eye className="h-4 w-4 mr-2" />
@@ -489,9 +585,9 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleSaveNotifications} className="btn-primary">
+                <Button onClick={handleSaveNotifications} disabled={isSaving} className="btn-primary">
                   <Save className="h-4 w-4 mr-2" />
-                  Save Preferences
+                  {isSaving ? 'Saving...' : 'Save Preferences'}
                 </Button>
               </CardContent>
             </Card>

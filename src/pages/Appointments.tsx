@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,14 +14,13 @@ import {
   Clock, 
   Plus, 
   User,
-  MapPin,
   Phone,
   Mail,
   CheckCircle,
-  XCircle,
   Settings,
-  ExternalLink,
-  LogIn
+  LogIn,
+  Trash2,
+  Edit
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,26 +42,44 @@ const Appointments = () => {
   const [appointments, setAppointments] = useState<AppointmentData[]>([]);
   const [services, setServices] = useState<ServiceData[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
 
-  // Check authentication status on mount
+  // Check authentication status on mount and set up listener
   useEffect(() => {
     checkAuthStatus();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      setUser(session?.user || null);
+      if (session?.user) {
+        loadData();
+      } else {
+        setAppointments([]);
+        setServices([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Load data when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       loadData();
     } else {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const checkAuthStatus = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
+      setUser(user);
     } catch (error) {
       console.error('Error checking auth status:', error);
       setIsAuthenticated(false);
@@ -69,7 +87,7 @@ const Appointments = () => {
   };
 
   const loadData = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !user) return;
     
     setIsLoading(true);
     try {
@@ -81,13 +99,11 @@ const Appointments = () => {
       setServices(servicesData);
     } catch (error) {
       console.error('Error loading data:', error);
-      if (error instanceof Error && !error.message.includes('authenticated')) {
-        showToast({
-          title: "Error",
-          description: "Failed to load appointment data",
-          variant: "destructive"
-        });
-      }
+      showToast({
+        title: "Error",
+        description: "Failed to load appointment data",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +127,27 @@ const Appointments = () => {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const resetAppointmentForm = () => {
+    setNewAppointment({
+      customer: '',
+      email: '',
+      phone: '',
+      date: '',
+      time: '',
+      service: '',
+      notes: ''
+    });
+  };
+
+  const resetServiceForm = () => {
+    setNewService({ 
+      name: '', 
+      duration: '', 
+      price: '', 
+      description: '' 
+    });
+  };
 
   const handleCreateAppointment = async () => {
     if (!isAuthenticated) {
@@ -151,15 +188,8 @@ const Appointments = () => {
       await saveAppointment(appointmentData);
       await loadData();
       
-      setNewAppointment({
-        customer: '',
-        email: '',
-        phone: '',
-        date: '',
-        time: '',
-        service: '',
-        notes: ''
-      });
+      resetAppointmentForm();
+      setIsDialogOpen(false);
       
       showToast({
         title: "Success",
@@ -204,7 +234,7 @@ const Appointments = () => {
       await saveService(serviceData);
       await loadData();
       
-      setNewService({ name: '', duration: '', price: '', description: '' });
+      resetServiceForm();
       
       showToast({
         title: "Success",
@@ -233,6 +263,40 @@ const Appointments = () => {
       showToast({
         title: "Error",
         description: "Failed to update appointment status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAppointment = async (appointmentId: string) => {
+    if (!isAuthenticated || !window.confirm('Are you sure you want to delete this appointment?')) return;
+    
+    try {
+      await deleteAppointment(appointmentId);
+      await loadData();
+      toast.success('Appointment deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to delete appointment",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteService = async (serviceId: string) => {
+    if (!isAuthenticated || !window.confirm('Are you sure you want to delete this service?')) return;
+    
+    try {
+      await deleteService(serviceId);
+      await loadData();
+      toast.success('Service deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      showToast({
+        title: "Error",
+        description: "Failed to delete service",
         variant: "destructive"
       });
     }
@@ -278,7 +342,7 @@ const Appointments = () => {
             <p className="text-bizNeutral-600 mt-2">Manage your schedule and client appointments</p>
           </div>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-            <Dialog>
+            <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Settings className="h-4 w-4 mr-2" />
@@ -319,6 +383,7 @@ const Appointments = () => {
                       <Input
                         id="service-price"
                         type="number"
+                        step="0.01"
                         placeholder="0.00"
                         value={newService.price}
                         onChange={(e) => setNewService({ ...newService, price: e.target.value })}
@@ -340,28 +405,36 @@ const Appointments = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="font-medium">Current Services</h4>
+                    <h4 className="font-medium">Current Services ({services.length})</h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {services.map((service) => (
-                        <div key={service.id} className="flex items-center justify-between p-3 border border-bizNeutral-200 rounded-lg">
-                          <div>
-                            <div className="font-medium text-bizNeutral-900">{service.name}</div>
-                            <div className="text-sm text-bizNeutral-600">{service.duration}min • ${service.price}</div>
+                      {services.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No services yet. Add one above.</p>
+                      ) : (
+                        services.map((service) => (
+                          <div key={service.id} className="flex items-center justify-between p-3 border border-bizNeutral-200 rounded-lg">
+                            <div>
+                              <div className="font-medium text-bizNeutral-900">{service.name}</div>
+                              <div className="text-sm text-bizNeutral-600">{service.duration}min • ${service.price}</div>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteService(service.id!)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="sm">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
 
-            <Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button disabled={!isAuthenticated}>
+                <Button disabled={!isAuthenticated || services.length === 0}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Appointment
                 </Button>
@@ -452,6 +525,26 @@ const Appointments = () => {
           </div>
         </div>
 
+        {services.length === 0 && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Settings className="h-12 w-12 mx-auto text-yellow-600 mb-4" />
+                <h3 className="text-lg font-medium text-yellow-800 mb-2">No Services Available</h3>
+                <p className="text-yellow-700 mb-4">You need to create at least one service before you can book appointments.</p>
+                <Button 
+                  variant="outline" 
+                  className="border-yellow-300 text-yellow-800 hover:bg-yellow-100"
+                  onClick={() => setIsServiceDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Service
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
@@ -514,7 +607,19 @@ const Appointments = () => {
           <CardContent>
             <div className="space-y-4">
               {appointments.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No appointments yet</p>
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No appointments yet</p>
+                  {services.length > 0 && (
+                    <Button 
+                      className="mt-4" 
+                      onClick={() => setIsDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Book Your First Appointment
+                    </Button>
+                  )}
+                </div>
               ) : (
                 appointments.map((appointment) => (
                   <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
@@ -574,6 +679,13 @@ const Appointments = () => {
                           <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDeleteAppointment(appointment.id!)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     </div>
                   </div>
                 ))
