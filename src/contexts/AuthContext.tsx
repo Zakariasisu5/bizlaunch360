@@ -38,7 +38,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Check for existing session
     const savedUser = localStorage.getItem('bizlaunch_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('bizlaunch_user');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -55,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const mockUser: User = {
       id: '1',
       email,
-      name: existingUser ? existingUser.name : 'User', // Use existing name or fallback
+      name: existingUser ? existingUser.name : 'User',
       businessName: existingUser?.businessName || 'Tech Solutions Inc',
       businessType: existingUser?.businessType || 'Technology',
       onboardingComplete: existingUser?.onboardingComplete || true
@@ -74,7 +79,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const mockUser: User = {
       id: '1',
       email,
-      name, // Use the actual name provided during registration
+      name,
       onboardingComplete: false
     };
     
@@ -97,7 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const mockUser: User = {
       id: '1',
       email: 'user@gmail.com',
-      name: 'Google User', // More generic name for Google login
+      name: 'Google User',
       onboardingComplete: false
     };
     

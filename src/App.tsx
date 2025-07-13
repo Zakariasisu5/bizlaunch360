@@ -24,22 +24,22 @@ const App = () => (
     <ThemeProvider defaultTheme="light" storageKey="bizlaunch-theme">
       <TooltipProvider>
         <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/business-plan" element={<BusinessPlan />} />
-            <Route path="/finance" element={<Finance />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/crm" element={<CRM />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/business-plan" element={<BusinessPlan />} />
+              <Route path="/finance" element={<Finance />} />
+              <Route path="/appointments" element={<Appointments />} />
+              <Route path="/crm" element={<CRM />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
