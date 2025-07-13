@@ -57,9 +57,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             id: session.user.id,
             email: session.user.email || '',
             name: profile?.full_name || session.user.user_metadata?.full_name || 'User',
-            businessName: profile?.business_name,
-            businessType: profile?.business_type,
-            onboardingComplete: profile?.onboarding_complete || false
+            businessName: (profile as any)?.business_name,
+            businessType: (profile as any)?.business_type,
+            onboardingComplete: (profile as any)?.onboarding_complete || false
           };
           
           setUser(userData);
