@@ -48,13 +48,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // Check if user exists in localStorage from registration
+    const existingUsers = JSON.parse(localStorage.getItem('bizlaunch_users') || '[]');
+    const existingUser = existingUsers.find((u: any) => u.email === email);
+    
     const mockUser: User = {
       id: '1',
       email,
-      name: 'John Doe',
-      businessName: 'Tech Solutions Inc',
-      businessType: 'Technology',
-      onboardingComplete: true
+      name: existingUser ? existingUser.name : 'User', // Use existing name or fallback
+      businessName: existingUser?.businessName || 'Tech Solutions Inc',
+      businessType: existingUser?.businessType || 'Technology',
+      onboardingComplete: existingUser?.onboardingComplete || true
     };
     
     setUser(mockUser);
@@ -70,9 +74,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const mockUser: User = {
       id: '1',
       email,
-      name,
+      name, // Use the actual name provided during registration
       onboardingComplete: false
     };
+    
+    // Store user data for future login
+    const existingUsers = JSON.parse(localStorage.getItem('bizlaunch_users') || '[]');
+    const updatedUsers = existingUsers.filter((u: any) => u.email !== email);
+    updatedUsers.push(mockUser);
+    localStorage.setItem('bizlaunch_users', JSON.stringify(updatedUsers));
     
     setUser(mockUser);
     localStorage.setItem('bizlaunch_user', JSON.stringify(mockUser));
@@ -87,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const mockUser: User = {
       id: '1',
       email: 'user@gmail.com',
-      name: 'John Doe',
+      name: 'Google User', // More generic name for Google login
       onboardingComplete: false
     };
     
@@ -106,6 +116,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
       localStorage.setItem('bizlaunch_user', JSON.stringify(updatedUser));
+      
+      // Also update in the users list
+      const existingUsers = JSON.parse(localStorage.getItem('bizlaunch_users') || '[]');
+      const updatedUsers = existingUsers.map((u: any) => 
+        u.email === user.email ? updatedUser : u
+      );
+      localStorage.setItem('bizlaunch_users', JSON.stringify(updatedUsers));
     }
   };
 
