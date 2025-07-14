@@ -41,28 +41,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile from profiles table
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profile?.full_name || session.user.user_metadata?.full_name || 'User',
-            businessName: (profile as any)?.business_name,
-            businessType: (profile as any)?.business_type,
-            onboardingComplete: (profile as any)?.onboarding_complete || false
-          };
-          
-          setUser(userData);
+          // Defer profile fetching to avoid blocking auth state changes
+          setTimeout(async () => {
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .maybeSingle();
+              
+              const userData: User = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: profile?.full_name || session.user.user_metadata?.full_name || 'User',
+                businessName: (profile as any)?.business_name,
+                businessType: (profile as any)?.business_type,
+                onboardingComplete: (profile as any)?.onboarding_complete || false
+              };
+              
+              setUser(userData);
+            } catch (error) {
+              console.error('Error fetching profile:', error);
+              // Set basic user data even if profile fetch fails
+              const userData: User = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.full_name || 'User',
+                onboardingComplete: false
+              };
+              setUser(userData);
+            }
+          }, 0);
         } else {
           setUser(null);
         }
@@ -73,9 +87,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-      } else {
+      if (!session) {
         setIsLoading(false);
       }
     });
