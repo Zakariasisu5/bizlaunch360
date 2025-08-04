@@ -58,9 +58,14 @@ const Onboarding = () => {
         onboardingComplete: true
       });
       
-      toast.success('Welcome to BizLaunch360!');
-      navigate('/dashboard');
+      toast.success('🎉 Welcome to BizLaunch360! Your workspace is ready.');
+      
+      // Add a small delay for better UX
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
     } catch (error) {
+      console.error('Onboarding error:', error);
       toast.error('Failed to complete onboarding. Please try again.');
     } finally {
       setLoading(false);
@@ -198,7 +203,7 @@ const Onboarding = () => {
                     </div>
                   ) : (
                     <div className="flex items-center">
-                      Complete Setup & Launch
+                      Complete Setup & Launch Dashboard
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </div>
                   )}
