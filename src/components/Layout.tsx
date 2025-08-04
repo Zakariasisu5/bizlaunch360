@@ -35,9 +35,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
