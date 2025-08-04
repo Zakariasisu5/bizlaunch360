@@ -60,14 +60,11 @@ const Onboarding = () => {
       
       toast.success('🎉 Welcome to BizLaunch360! Your workspace is ready.');
       
-      // Add a small delay for better UX
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+      // Navigate immediately after successful update
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Onboarding error:', error);
       toast.error('Failed to complete onboarding. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
