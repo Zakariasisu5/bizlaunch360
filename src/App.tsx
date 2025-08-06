@@ -15,6 +15,7 @@ import Finance from "./pages/Finance";
 import Appointments from "./pages/Appointments";
 import CRM from "./pages/CRM";
 import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
                   <Dashboard />

@@ -82,6 +82,10 @@ export default {
 					900: '#111827'
 				}
 			},
+			fontFamily: {
+				sans: ["Inter", "sans-serif"],
+				montserrat: ["Montserrat", "sans-serif"],
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',

@@ -7,6 +7,14 @@ interface User {
   id: string;
   email: string;
   name: string;
+  businessName?: string;
+  businessType?: string;
+  businessAddress?: string;
+  businessPhone?: string;
+  businessEmail?: string;
+  businessWebsite?: string;
+  businessDescription?: string;
+  onboardingComplete?: boolean;
 }
 
 interface AuthContextType {
