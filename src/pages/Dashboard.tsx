@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -26,8 +25,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) {
       navigate('/login');
-    } else if (!user.onboardingComplete) {
-      navigate('/onboarding');
     }
   }, [user, navigate]);
 
@@ -75,7 +72,7 @@ const Dashboard = () => {
             Welcome back, {user.name}! 👋
           </h1>
           <p className="text-white/90 text-lg">
-            Here's what's happening with {user.businessName} today.
+            Here's what's happening with your business today.
           </p>
         </div>
 

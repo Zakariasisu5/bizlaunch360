@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,11 +18,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !isLoading) {
-      if (user.onboardingComplete) {
-        navigate('/dashboard', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
-      }
+      navigate('/dashboard', { replace: true });
     }
   }, [user, isLoading, navigate]);
 
