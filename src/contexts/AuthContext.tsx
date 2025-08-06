@@ -7,9 +7,6 @@ interface User {
   id: string;
   email: string;
   name: string;
-  businessName?: string;
-  businessType?: string;
-  onboardingComplete?: boolean;
 }
 
 interface AuthContextType {
@@ -58,10 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               const userData: User = {
                 id: session.user.id,
                 email: session.user.email || '',
-                name: profile?.full_name || session.user.user_metadata?.full_name || 'User',
-                businessName: (profile as any)?.business_name,
-                businessType: (profile as any)?.business_type,
-                onboardingComplete: (profile as any)?.onboarding_complete || false
+                name: profile?.full_name || session.user.user_metadata?.full_name || 'User'
               };
               
               setUser(userData);
@@ -71,8 +65,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               const userData: User = {
                 id: session.user.id,
                 email: session.user.email || '',
-                name: session.user.user_metadata?.full_name || 'User',
-                onboardingComplete: false
+                name: session.user.user_metadata?.full_name || 'User'
               };
               setUser(userData);
             }
@@ -162,10 +155,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { error } = await supabase
       .from('profiles')
       .update({
-        full_name: userData.name,
-        business_name: userData.businessName,
-        business_type: userData.businessType,
-        onboarding_complete: userData.onboardingComplete
+        full_name: userData.name
       })
       .eq('id', user.id);
     
