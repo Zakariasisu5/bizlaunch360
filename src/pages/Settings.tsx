@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -201,11 +202,14 @@ const Settings = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="font-montserrat font-bold space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-bizNeutral-900">Settings</h1>
-          <p className="text-bizNeutral-600 mt-2">Manage your account, business, and application preferences</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground mt-2">Manage your account, business, and application preferences</p>
+          </div>
+          <ThemeToggle />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
