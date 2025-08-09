@@ -106,165 +106,55 @@ const BusinessPlan = () => {
   };
 
   const handleGenerateWithAI = async () => {
+    if (!planTitle.trim()) {
+      showToast({
+        title: "Title Required",
+        description: "Please enter a title so AI can tailor your plan",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
-    // Simulate AI generation
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    setPlanData({
-      executiveSummary: `Our technology consulting firm aims to bridge the gap between complex technical solutions and business needs. We provide strategic technology guidance, implementation services, and ongoing support to help businesses leverage technology for growth and efficiency.
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-business-plan', {
+        body: {
+          title: planTitle.trim(),
+          context: planData,
+        },
+      });
 
-Key Success Factors:
-• Deep technical expertise combined with business acumen
-• Proven track record of successful implementations
-• Strong client relationships and referral network
-• Agile methodology and rapid delivery capabilities`,
-      
-      businessDescription: `TechSolutions Pro is a boutique technology consulting firm specializing in digital transformation, cloud migration, and custom software development. Founded in 2024, we serve small to medium-sized businesses looking to modernize their operations and gain competitive advantages through technology.
+      if (error) {
+        throw error;
+      }
 
-Our Services:
-• Strategic Technology Planning
-• Cloud Infrastructure Design & Migration  
-• Custom Software Development
-• Digital Process Automation
-• Technology Training & Support
+      const aiPlan = (data as any)?.plan;
+      if (!aiPlan) {
+        throw new Error('No plan returned from AI');
+      }
 
-Target Market: SMBs with 10-500 employees across various industries seeking to modernize their technology stack and improve operational efficiency.`,
+      setPlanData({
+        executiveSummary: aiPlan.executiveSummary || '',
+        businessDescription: aiPlan.businessDescription || '',
+        marketAnalysis: aiPlan.marketAnalysis || '',
+        organization: aiPlan.organization || '',
+        products: aiPlan.products || '',
+        marketing: aiPlan.marketing || '',
+        funding: aiPlan.funding || '',
+        financials: aiPlan.financials || '',
+      });
 
-      marketAnalysis: `Market Size: The global IT consulting market is valued at $530 billion and growing at 6.1% annually.
-
-Target Market Analysis:
-• Primary: SMBs in healthcare, finance, and retail sectors
-• Secondary: Startups needing technical co-founding support
-• Market Gap: Affordable, high-quality consulting for mid-market companies
-
-Competitive Landscape:
-• Large firms (Deloitte, Accenture): High cost, less personal
-• Freelancers: Limited scope, reliability concerns  
-• Our Advantage: Boutique service quality with competitive pricing
-
-Market Trends:
-• Increased demand for cloud migration (40% growth)
-• Focus on cybersecurity and compliance
-• Remote work technology needs`,
-
-      organization: `Leadership Team:
-• CEO/Founder: Technology strategy and client relations
-• CTO: Technical architecture and implementation oversight
-• Lead Developer: Software development and mentoring
-• Business Development Manager: Sales and partnerships
-
-Organizational Structure:
-• Flat structure promoting collaboration
-• Project-based teams with cross-functional skills
-• Quarterly all-hands for alignment and growth planning
-• Continuous learning and certification programs
-
-Key Personnel Needs:
-• Senior cloud architect (Year 1)
-• Additional developers (Years 2-3)
-• Sales representatives (Year 2)`,
-
-      products: `Core Service Offerings:
-
-1. Technology Strategy Consulting ($150/hour)
-   • Technology audits and assessments
-   • Digital transformation roadmaps
-   • Vendor selection and negotiation
-
-2. Implementation Services ($125/hour)
-   • Cloud migration projects
-   • Custom software development
-   • System integration and APIs
-
-3. Ongoing Support Packages ($2,500-$10,000/month)
-   • Managed cloud services
-   • Help desk and technical support
-   • Monitoring and maintenance
-
-4. Training and Workshops ($1,500/day)
-   • Team training on new technologies
-   • Best practices workshops
-   • Technology leadership development`,
-
-      marketing: `Marketing Strategy:
-
-Digital Marketing:
-• Content marketing (blog, whitepapers, case studies)
-• LinkedIn and industry publication presence
-• Search engine optimization for key terms
-• Webinar series on technology trends
-
-Relationship Building:
-• Industry networking events and conferences
-• Strategic partnerships with complementary firms
-• Referral program for existing clients
-• Speaking engagements at business events
-
-Sales Process:
-• Initial consultation (free 1-hour assessment)
-• Proposal with detailed scope and timeline
-• Phased implementation approach
-• Regular check-ins and success measurement
-
-Client Retention:
-• Quarterly business reviews
-• Proactive technology recommendations
-• Loyalty program with preferred pricing`,
-
-      funding: `Funding Requirements: $75,000
-
-Startup Costs:
-• Equipment and software: $15,000
-• Office setup and deposits: $20,000
-• Initial marketing and branding: $10,000
-• Legal and professional fees: $5,000
-• Working capital: $25,000
-
-Funding Sources:
-• Personal investment: $30,000 (40%)
-• Small business loan: $25,000 (33%)
-• Angel investor: $20,000 (27%)
-
-Use of Funds:
-• 60% - Operations and working capital
-• 20% - Marketing and business development
-• 15% - Equipment and technology
-• 5% - Legal and professional services`,
-
-      financials: `Financial Projections (3-Year):
-
-Year 1:
-• Revenue: $180,000
-• Expenses: $150,000
-• Net Profit: $30,000 (17% margin)
-• Clients: 15 active clients
-
-Year 2:
-• Revenue: $320,000
-• Expenses: $240,000
-• Net Profit: $80,000 (25% margin)
-• Clients: 25 active clients
-
-Year 3:
-• Revenue: $500,000
-• Expenses: $350,000
-• Net Profit: $150,000 (30% margin)
-• Clients: 35 active clients
-
-Key Assumptions:
-• Average project value: $12,000
-• Monthly recurring revenue growth: 15%
-• Client retention rate: 85%
-• Billable hours per month: 120-150
-
-Break-even Analysis:
-• Fixed costs: $8,000/month
-• Variable costs: 60% of revenue
-• Break-even point: $20,000/month (Month 6)`
-    });
-    
-    setIsGenerating(false);
-    toast.success('AI business plan generated successfully!');
+      toast.success('AI business plan generated successfully!');
+    } catch (err: any) {
+      console.error('AI generation error:', err);
+      showToast({
+        title: 'Generation Failed',
+        description: err?.message || 'Unable to generate content. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSave = async () => {
