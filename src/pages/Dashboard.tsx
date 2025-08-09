@@ -66,15 +66,6 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Welcome Section */}
-        <div className="gradient-hero rounded-xl p-8 text-white">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.name}! 👋
-          </h1>
-          <p className="text-white/90 text-lg">
-            Here's what's happening with your business today.
-          </p>
-        </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

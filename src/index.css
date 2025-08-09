@@ -73,7 +73,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-white text-bizNeutral-900 font-sans;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
