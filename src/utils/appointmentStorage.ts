@@ -126,19 +126,33 @@ export const loadAppointments = async (): Promise<AppointmentData[]> => {
 };
 
 export const deleteAppointment = async (appointmentId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be authenticated to delete appointments');
+  }
+
   const { error } = await supabase
     .from('appointments')
     .delete()
-    .eq('id', appointmentId);
+    .eq('id', appointmentId)
+    .eq('user_id', user.id); // Additional security: ensure user owns the appointment
 
   if (error) throw error;
 };
 
 export const updateAppointmentStatus = async (appointmentId: string, status: 'pending' | 'confirmed' | 'cancelled' | 'completed'): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be authenticated to update appointments');
+  }
+
   const { error } = await supabase
     .from('appointments')
     .update({ status })
-    .eq('id', appointmentId);
+    .eq('id', appointmentId)
+    .eq('user_id', user.id); // Additional security: ensure user owns the appointment
 
   if (error) throw error;
 };
@@ -223,10 +237,17 @@ export const loadServices = async (): Promise<ServiceData[]> => {
 };
 
 export const deleteService = async (serviceId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be authenticated to delete services');
+  }
+
   const { error } = await supabase
     .from('services')
     .delete()
-    .eq('id', serviceId);
+    .eq('id', serviceId)
+    .eq('user_id', user.id); // Additional security: ensure user owns the service
 
   if (error) throw error;
 };
