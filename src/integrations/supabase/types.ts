@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -110,6 +110,81 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      community_news: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          message: string
+          priority: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          message: string
+          priority?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          message?: string
+          priority?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      complaints: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          phone_number: string | null
+          priority: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          phone_number?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          phone_number?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -526,6 +601,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      health_tips: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          priority: number
+          tip: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          tip: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          tip?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       job_recommendations: {
         Row: {
@@ -1081,6 +1192,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ussd_sessions: {
+        Row: {
+          created_at: string
+          current_step: string
+          id: string
+          input_data: Json | null
+          phone_number: string
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_step: string
+          id?: string
+          input_data?: Json | null
+          phone_number: string
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: string
+          id?: string
+          input_data?: Json | null
+          phone_number?: string
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       volunteer_applications: {
         Row: {
           availability: string
@@ -1175,7 +1316,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
