@@ -31,6 +31,7 @@ import { generateBusinessPlanPDF } from '@/utils/pdfGenerator';
 import { saveBusinessPlan, loadBusinessPlans, deleteBusinessPlan, loadBusinessPlan, BusinessPlanData } from '@/utils/businessPlanStorage';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import BusinessPlanAIAssistant from '@/components/BusinessPlanAIAssistant';
 
 const BusinessPlan = () => {
   const { toast: showToast } = useToast();
@@ -543,13 +544,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Executive Summary</CardTitle>
                         <CardDescription className="text-sm">A brief overview of your business concept and key success factors</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Describe your business concept, mission, and key success factors..."
                           value={planData.executiveSummary}
                           onChange={(e) => setPlanData({ ...planData, executiveSummary: e.target.value })}
                           rows={6}
                           className="min-h-[120px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="executiveSummary"
+                          currentContent={planData.executiveSummary}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, executiveSummary: content })}
                         />
                       </CardContent>
                     </Card>
@@ -559,13 +565,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Business Description</CardTitle>
                         <CardDescription className="text-sm">Detailed description of your business, products, and services</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Provide detailed information about your business, what you offer, and your target market..."
                           value={planData.businessDescription}
                           onChange={(e) => setPlanData({ ...planData, businessDescription: e.target.value })}
                           rows={8}
                           className="min-h-[160px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="businessDescription"
+                          currentContent={planData.businessDescription}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, businessDescription: content })}
                         />
                       </CardContent>
                     </Card>
@@ -579,13 +590,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Market Analysis</CardTitle>
                         <CardDescription className="text-sm">Analysis of your target market, competition, and industry trends</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Analyze your target market, competitors, market size, and industry trends..."
                           value={planData.marketAnalysis}
                           onChange={(e) => setPlanData({ ...planData, marketAnalysis: e.target.value })}
                           rows={8}
                           className="min-h-[160px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="marketAnalysis"
+                          currentContent={planData.marketAnalysis}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, marketAnalysis: content })}
                         />
                       </CardContent>
                     </Card>
@@ -595,13 +611,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Organization & Management</CardTitle>
                         <CardDescription className="text-sm">Your organizational structure and key team members</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Describe your organizational structure, key team members, and their roles..."
                           value={planData.organization}
                           onChange={(e) => setPlanData({ ...planData, organization: e.target.value })}
                           rows={6}
                           className="min-h-[120px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="organization"
+                          currentContent={planData.organization}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, organization: content })}
                         />
                       </CardContent>
                     </Card>
@@ -615,13 +636,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Funding Request</CardTitle>
                         <CardDescription className="text-sm">Your funding requirements and how you plan to use the funds</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Describe your funding needs, sources, and planned use of funds..."
                           value={planData.funding}
                           onChange={(e) => setPlanData({ ...planData, funding: e.target.value })}
                           rows={6}
                           className="min-h-[120px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="funding"
+                          currentContent={planData.funding}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, funding: content })}
                         />
                       </CardContent>
                     </Card>
@@ -631,13 +657,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Financial Projections</CardTitle>
                         <CardDescription className="text-sm">Revenue forecasts, expense projections, and profitability analysis</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Include revenue projections, expense forecasts, break-even analysis, and cash flow statements..."
                           value={planData.financials}
                           onChange={(e) => setPlanData({ ...planData, financials: e.target.value })}
                           rows={8}
                           className="min-h-[160px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="financials"
+                          currentContent={planData.financials}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, financials: content })}
                         />
                       </CardContent>
                     </Card>
@@ -651,13 +682,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Products & Services</CardTitle>
                         <CardDescription className="text-sm">Detailed description of your offerings and pricing strategy</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Describe your products or services, pricing strategy, and competitive advantages..."
                           value={planData.products}
                           onChange={(e) => setPlanData({ ...planData, products: e.target.value })}
                           rows={6}
                           className="min-h-[120px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="products"
+                          currentContent={planData.products}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, products: content })}
                         />
                       </CardContent>
                     </Card>
@@ -667,13 +703,18 @@ const BusinessPlan = () => {
                         <CardTitle className="text-lg sm:text-xl">Marketing & Sales Strategy</CardTitle>
                         <CardDescription className="text-sm">How you plan to attract and retain customers</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Textarea
                           placeholder="Outline your marketing strategy, sales process, and customer acquisition plans..."
                           value={planData.marketing}
                           onChange={(e) => setPlanData({ ...planData, marketing: e.target.value })}
                           rows={6}
                           className="min-h-[120px] text-sm"
+                        />
+                        <BusinessPlanAIAssistant
+                          section="marketing"
+                          currentContent={planData.marketing}
+                          onSuggestionGenerated={(content) => setPlanData({ ...planData, marketing: content })}
                         />
                       </CardContent>
                     </Card>

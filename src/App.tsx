@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import BusinessPlan from "./pages/BusinessPlan";
+import ContentGeneratorPage from "./pages/ContentGenerator";
 import Finance from "./pages/Finance";
 import Appointments from "./pages/Appointments";
 import CRM from "./pages/CRM";
@@ -40,6 +41,11 @@ const App = () => (
               <Route path="/business-plan" element={
                 <ProtectedRoute>
                   <BusinessPlan />
+                </ProtectedRoute>
+              } />
+              <Route path="/content-generator" element={
+                <ProtectedRoute>
+                  <ContentGeneratorPage />
                 </ProtectedRoute>
               } />
               <Route path="/finance" element={
