@@ -14,7 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          duration: number
+          id: string
+          notes: string | null
+          service_name: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          duration?: number
+          id?: string
+          notes?: string | null
+          service_name: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          duration?: number
+          id?: string
+          notes?: string | null
+          service_name?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      business_plans: {
+        Row: {
+          business_description: string | null
+          created_at: string
+          executive_summary: string | null
+          financials: string | null
+          funding: string | null
+          id: string
+          market_analysis: string | null
+          marketing: string | null
+          organization: string | null
+          products: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_description?: string | null
+          created_at?: string
+          executive_summary?: string | null
+          financials?: string | null
+          funding?: string | null
+          id?: string
+          market_analysis?: string | null
+          marketing?: string | null
+          organization?: string | null
+          products?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_description?: string | null
+          created_at?: string
+          executive_summary?: string | null
+          financials?: string | null
+          funding?: string | null
+          id?: string
+          market_analysis?: string | null
+          marketing?: string | null
+          organization?: string | null
+          products?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: number
+          id: string
+          name: string
+          price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          name: string
+          price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          name?: string
+          price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
