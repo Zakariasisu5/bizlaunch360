@@ -1,1 +1,13 @@
 project_id = "pnkkbclqwugsoarkfmqi"
+
+[functions.ai-assistant]
+verify_jwt = false
+
+[functions.generate-business-plan]
+verify_jwt = false
+
+[functions.streaming-chat]
+verify_jwt = false
+
+[functions.generate-content]
+verify_jwt = false

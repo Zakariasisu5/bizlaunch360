@@ -17,7 +17,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import VideoDemo from '@/components/VideoDemo';
-import AIAssistant from '@/components/AIAssistant';
+import StreamingChatbot from '@/components/StreamingChatbot';
 
 const features = [
   {
@@ -291,8 +291,8 @@ const Index = () => {
         </div>
       </footer>
       
-      {/* AI Assistant */}
-      <AIAssistant />
+      {/* AI Streaming Chatbot */}
+      <StreamingChatbot />
     </div>
   );
 };
