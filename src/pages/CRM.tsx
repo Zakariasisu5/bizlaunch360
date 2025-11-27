@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -20,6 +20,8 @@ import {
   Download,
   UserPlus
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Customer {
   id: string;
@@ -39,60 +41,63 @@ const CRM = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'lead' | 'prospect'>('all');
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock customer data
-  const [customers] = useState<Customer[]>([
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john@example.com',
-      phone: '+1 (555) 123-4567',
-      company: 'Tech Solutions Inc',
-      address: '123 Main St, City, State 12345',
-      status: 'active',
-      totalSpent: 2500,
-      lastContact: '2024-01-15',
-      notes: 'Interested in premium package'
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah@company.com',
-      phone: '+1 (555) 987-6543',
-      company: 'Marketing Pro',
-      status: 'lead',
-      totalSpent: 0,
-      lastContact: '2024-01-10',
-      notes: 'Responded to email campaign'
-    },
-    {
-      id: '3',
-      name: 'Mike Davis',
-      email: 'mike@business.com',
-      phone: '+1 (555) 456-7890',
-      status: 'prospect',
-      totalSpent: 1200,
-      lastContact: '2024-01-08'
-    },
-    {
-      id: '4',
-      name: 'Emily Wilson',
-      email: 'emily@startup.com',
-      phone: '+1 (555) 321-0987',
-      company: 'Innovation Labs',
-      status: 'inactive',
-      totalSpent: 800,
-      lastContact: '2023-12-20'
-    }
-  ]);
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (!user) {
       navigate('/login');
+    } else {
+      loadCustomers();
     }
   }, [user, navigate]);
 
+  const loadCustomers = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedCustomers: Customer[] = (data || []).map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone || '',
+        company: c.company || undefined,
+        address: c.address || undefined,
+        status: c.status as Customer['status'],
+        totalSpent: Number(c.total_spent),
+        lastContact: c.last_contact || new Date().toISOString().split('T')[0],
+        notes: c.notes || undefined
+      }));
+
+      setCustomers(formattedCustomers);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+      toast.error('Failed to load customers');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!user) return null;
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading customers...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

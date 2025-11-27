@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,8 @@ import {
   CreditCard
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Invoice {
   id: string;
@@ -45,60 +47,53 @@ interface Expense {
 }
 
 const Finance = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: '1',
-      number: 'INV-001',
-      customer: 'Acme Corp',
-      amount: 2500,
-      status: 'paid',
-      date: '2024-01-15',
-      dueDate: '2024-02-15'
-    },
-    {
-      id: '2',
-      number: 'INV-002', 
-      customer: 'Tech Solutions',
-      amount: 1800,
-      status: 'sent',
-      date: '2024-01-20',
-      dueDate: '2024-02-20'
-    },
-    {
-      id: '3',
-      number: 'INV-003',
-      customer: 'StartupXYZ',
-      amount: 3200,
-      status: 'overdue',
-      date: '2023-12-10',
-      dueDate: '2024-01-10'
-    }
-  ]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [expenses, setExpenses] = useState<Expense[]>([
-    {
-      id: '1',
-      description: 'Office rent',
-      amount: 1200,
-      category: 'Rent',
-      date: '2024-01-01'
-    },
-    {
-      id: '2',
-      description: 'Software licenses',
-      amount: 450,
-      category: 'Software',
-      date: '2024-01-05'
-    },
-    {
-      id: '3',
-      description: 'Marketing campaign',
-      amount: 800,
-      category: 'Marketing',
-      date: '2024-01-10'
+  useEffect(() => {
+    if (user) {
+      loadFinanceData();
     }
-  ]);
+  }, [user]);
+
+  const loadFinanceData = async () => {
+    try {
+      setIsLoading(true);
+      const [invoicesData, expensesData] = await Promise.all([
+        supabase.from('invoices').select('*').order('created_at', { ascending: false }),
+        supabase.from('expenses').select('*').order('created_at', { ascending: false })
+      ]);
+
+      if (invoicesData.error) throw invoicesData.error;
+      if (expensesData.error) throw expensesData.error;
+
+      setInvoices((invoicesData.data || []).map(inv => ({
+        id: inv.id,
+        number: inv.invoice_number,
+        customer: inv.customer_name,
+        amount: Number(inv.amount),
+        status: inv.status as Invoice['status'],
+        date: inv.invoice_date,
+        dueDate: inv.due_date
+      })));
+
+      setExpenses((expensesData.data || []).map(exp => ({
+        id: exp.id,
+        description: exp.description,
+        amount: Number(exp.amount),
+        category: exp.category,
+        date: exp.expense_date
+      })));
+    } catch (error) {
+      console.error('Error loading finance data:', error);
+      toast.error('Failed to load finance data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [newInvoice, setNewInvoice] = useState({
     customer: '',
@@ -129,59 +124,107 @@ const Finance = () => {
     }
   };
 
-  const handleCreateInvoice = () => {
-    if (!newInvoice.customer || !newInvoice.amount) {
+  const handleCreateInvoice = async () => {
+    if (!newInvoice.customer || !newInvoice.amount || !user) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const invoice: Invoice = {
-      id: Date.now().toString(),
-      number: `INV-${String(invoices.length + 1).padStart(3, '0')}`,
-      customer: newInvoice.customer,
-      amount: parseFloat(newInvoice.amount),
-      status: 'draft',
-      date: new Date().toISOString().split('T')[0],
-      dueDate: newInvoice.dueDate
-    };
+    try {
+      const { error } = await supabase.from('invoices').insert({
+        user_id: user.id,
+        invoice_number: `INV-${String(invoices.length + 1).padStart(3, '0')}`,
+        customer_name: newInvoice.customer,
+        amount: parseFloat(newInvoice.amount),
+        status: 'draft',
+        invoice_date: new Date().toISOString().split('T')[0],
+        due_date: newInvoice.dueDate,
+        description: newInvoice.description
+      });
 
-    setInvoices([invoice, ...invoices]);
-    setNewInvoice({ customer: '', amount: '', description: '', dueDate: '' });
-    toast.success('Invoice created successfully!');
+      if (error) throw error;
+
+      await loadFinanceData();
+      setNewInvoice({ customer: '', amount: '', description: '', dueDate: '' });
+      toast.success('Invoice created successfully!');
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast.error('Failed to create invoice');
+    }
   };
 
-  const handleAddExpense = () => {
-    if (!newExpense.description || !newExpense.amount || !newExpense.category) {
+  const handleAddExpense = async () => {
+    if (!newExpense.description || !newExpense.amount || !newExpense.category || !user) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const expense: Expense = {
-      id: Date.now().toString(),
-      description: newExpense.description,
-      amount: parseFloat(newExpense.amount),
-      category: newExpense.category,
-      date: newExpense.date || new Date().toISOString().split('T')[0]
-    };
+    try {
+      const { error } = await supabase.from('expenses').insert({
+        user_id: user.id,
+        description: newExpense.description,
+        amount: parseFloat(newExpense.amount),
+        category: newExpense.category,
+        expense_date: newExpense.date || new Date().toISOString().split('T')[0]
+      });
 
-    setExpenses([expense, ...expenses]);
-    setNewExpense({ description: '', amount: '', category: '', date: '' });
-    toast.success('Expense added successfully!');
+      if (error) throw error;
+
+      await loadFinanceData();
+      setNewExpense({ description: '', amount: '', category: '', date: '' });
+      toast.success('Expense added successfully!');
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      toast.error('Failed to add expense');
+    }
   };
 
-  const handleSendInvoice = (invoiceId: string) => {
-    setInvoices(invoices.map(inv => 
-      inv.id === invoiceId ? { ...inv, status: 'sent' as const } : inv
-    ));
-    toast.success('Invoice sent successfully!');
+  const handleSendInvoice = async (invoiceId: string) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'sent' })
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      await loadFinanceData();
+      toast.success('Invoice sent successfully!');
+    } catch (error) {
+      console.error('Error sending invoice:', error);
+      toast.error('Failed to send invoice');
+    }
   };
 
-  const handleMarkAsPaid = (invoiceId: string) => {
-    setInvoices(invoices.map(inv => 
-      inv.id === invoiceId ? { ...inv, status: 'paid' as const } : inv
-    ));
-    toast.success('Invoice marked as paid!');
+  const handleMarkAsPaid = async (invoiceId: string) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'paid' })
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      await loadFinanceData();
+      toast.success('Invoice marked as paid!');
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      toast.error('Failed to mark invoice as paid');
+    }
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading finance data...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
