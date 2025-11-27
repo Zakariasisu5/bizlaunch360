@@ -26,24 +26,24 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#3B82F6',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
 					foreground: 'hsl(var(--secondary-foreground))'
 				},
 				destructive: {
-					DEFAULT: '#EF4444',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))'
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
 				},
 				accent: {
-					DEFAULT: '#6366F1',
-					foreground: '#FFFFFF'
+					DEFAULT: 'hsl(var(--accent))',
+					foreground: 'hsl(var(--accent-foreground))'
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
@@ -62,24 +62,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// BizLaunch360 Brand Colors
-				bizPrimary: '#3B82F6',
-				bizAccent: '#6366F1',
-				bizSuccess: '#10B981',
-				bizWarning: '#F59E0B',
-				bizError: '#EF4444',
-				bizNeutral: {
-					50: '#F9FAFB',
-					100: '#F3F4F6',
-					200: '#E5E7EB',
-					300: '#D1D5DB',
-					400: '#9CA3AF',
-					500: '#6B7280',
-					600: '#4B5563',
-					700: '#374151',
-					800: '#1F2937',
-					900: '#111827'
 				}
 			},
 			fontFamily: {
