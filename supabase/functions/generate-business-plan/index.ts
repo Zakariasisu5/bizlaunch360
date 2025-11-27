@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,8 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      throw new Error('OPENAI_API_KEY is not set');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY is not set');
     }
 
     const { title, context } = await req.json();
@@ -30,16 +30,14 @@ Do not include markdown fences or extra text. Keep each section concise but prac
 
     const userPrompt = `Business plan title: ${title}\n\nExisting content (empty strings mean missing):\n${JSON.stringify(context || {}, null, 2)}\n\nGoals:\n- Improve provided sections for clarity, realism, and impact\n- Fill any missing sections with sensible assumptions\n- Use clear headings and bullet points where appropriate\n- Be specific to the business title if no other info provided\n\nReturn strictly valid JSON.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        temperature: 0.7,
-        max_tokens: 1200,
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -49,7 +47,7 @@ Do not include markdown fences or extra text. Keep each section concise but prac
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`OpenAI error ${response.status}: ${errText}`);
+      throw new Error(`AI Gateway error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
