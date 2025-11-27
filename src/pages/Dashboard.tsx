@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -17,37 +17,132 @@ import {
   Plus
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    monthlyRevenue: 0,
+    totalCustomers: 0,
+    appointmentsThisWeek: 0,
+    revenueData: [] as any[],
+    customerData: [] as any[]
+  });
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
+    } else {
+      loadDashboardData();
     }
   }, [user, navigate]);
 
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      
+      const [invoicesRes, customersRes, appointmentsRes, expensesRes] = await Promise.all([
+        supabase.from('invoices').select('amount, status, invoice_date'),
+        supabase.from('customers').select('id, created_at'),
+        supabase.from('appointments').select('appointment_date'),
+        supabase.from('expenses').select('amount, expense_date')
+      ]);
+
+      // Calculate monthly revenue (paid invoices)
+      const paidInvoices = (invoicesRes.data || []).filter(inv => inv.status === 'paid');
+      const currentMonth = new Date().getMonth();
+      const monthlyRevenue = paidInvoices
+        .filter(inv => new Date(inv.invoice_date).getMonth() === currentMonth)
+        .reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+      // Get total customers
+      const totalCustomers = customersRes.data?.length || 0;
+
+      // Calculate appointments this week
+      const today = new Date();
+      const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const appointmentsThisWeek = (appointmentsRes.data || []).filter(apt => {
+        const aptDate = new Date(apt.appointment_date);
+        return aptDate >= today && aptDate <= weekFromNow;
+      }).length;
+
+      // Generate revenue data for last 6 months
+      const revenueData = [];
+      const expenseData = expensesRes.data || [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        
+        const monthRevenue = paidInvoices
+          .filter(inv => {
+            const invDate = new Date(inv.invoice_date);
+            return invDate.getMonth() === date.getMonth() && invDate.getFullYear() === date.getFullYear();
+          })
+          .reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+        const monthExpenses = expenseData
+          .filter(exp => {
+            const expDate = new Date(exp.expense_date);
+            return expDate.getMonth() === date.getMonth() && expDate.getFullYear() === date.getFullYear();
+          })
+          .reduce((sum, exp) => sum + Number(exp.amount), 0);
+
+        revenueData.push({
+          month: monthName,
+          revenue: monthRevenue,
+          expenses: monthExpenses
+        });
+      }
+
+      // Generate customer growth data
+      const customerData = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        
+        const customersUntilMonth = (customersRes.data || []).filter(c => {
+          const createdDate = new Date(c.created_at);
+          return createdDate <= date;
+        }).length;
+
+        customerData.push({
+          month: monthName,
+          customers: customersUntilMonth
+        });
+      }
+
+      setDashboardData({
+        monthlyRevenue,
+        totalCustomers,
+        appointmentsThisWeek,
+        revenueData,
+        customerData
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!user) return null;
 
-  // Mock data for charts
-  const revenueData = [
-    { month: 'Jan', revenue: 4500, expenses: 2200 },
-    { month: 'Feb', revenue: 5200, expenses: 2400 },
-    { month: 'Mar', revenue: 4800, expenses: 2100 },
-    { month: 'Apr', revenue: 6100, expenses: 2600 },
-    { month: 'May', revenue: 7200, expenses: 2800 },
-    { month: 'Jun', revenue: 8500, expenses: 3200 },
-  ];
-
-  const customerData = [
-    { month: 'Jan', customers: 45 },
-    { month: 'Feb', customers: 52 },
-    { month: 'Mar', customers: 48 },
-    { month: 'Apr', customers: 61 },
-    { month: 'May', customers: 75 },
-    { month: 'Jun', customers: 89 },
-  ];
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const quickActions = [
     { title: 'Create Invoice', icon: DollarSign, href: '/finance', color: 'bg-bizSuccess' },
@@ -77,10 +172,9 @@ const Dashboard = () => {
               <DollarSign className="h-4 w-4 text-bizSuccess" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">$8,500</div>
-              <div className="flex items-center text-xs text-bizSuccess">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +18% from last month
+              <div className="text-2xl font-bold text-bizNeutral-900">${dashboardData.monthlyRevenue.toLocaleString()}</div>
+              <div className="flex items-center text-xs text-bizNeutral-500">
+                Current month
               </div>
             </CardContent>
           </Card>
@@ -93,10 +187,9 @@ const Dashboard = () => {
               <Users className="h-4 w-4 text-bizPrimary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">89</div>
-              <div className="flex items-center text-xs text-bizSuccess">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +12% from last month
+              <div className="text-2xl font-bold text-bizNeutral-900">{dashboardData.totalCustomers}</div>
+              <div className="flex items-center text-xs text-bizNeutral-500">
+                All time
               </div>
             </CardContent>
           </Card>
@@ -109,10 +202,10 @@ const Dashboard = () => {
               <Calendar className="h-4 w-4 text-bizAccent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">12</div>
+              <div className="text-2xl font-bold text-bizNeutral-900">{dashboardData.appointmentsThisWeek}</div>
               <div className="flex items-center text-xs text-bizNeutral-500">
                 <Clock className="h-3 w-3 mr-1" />
-                3 today, 4 tomorrow
+                Next 7 days
               </div>
             </CardContent>
           </Card>
@@ -143,7 +236,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueData}>
+                <BarChart data={dashboardData.revenueData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -162,7 +255,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={customerData}>
+                <LineChart data={dashboardData.customerData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
