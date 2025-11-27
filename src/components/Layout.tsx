@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import StreamingChatbot from '@/components/StreamingChatbot';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -129,6 +131,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Menu className="h-5 w-5" />
               </Button>
               
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
@@ -138,6 +143,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
+
+      {/* Global Chatbot */}
+      <StreamingChatbot />
     </div>
   );
 };
