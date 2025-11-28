@@ -113,6 +113,51 @@ export type Database = {
         }
         Relationships: []
       }
+      businesses: {
+        Row: {
+          business_address: string
+          business_description: string | null
+          business_email: string
+          business_name: string
+          business_phone: string
+          business_type: string
+          business_website: string | null
+          created_at: string
+          id: string
+          onboarding_complete: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_address: string
+          business_description?: string | null
+          business_email: string
+          business_name: string
+          business_phone: string
+          business_type: string
+          business_website?: string | null
+          created_at?: string
+          id?: string
+          onboarding_complete?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_address?: string
+          business_description?: string | null
+          business_email?: string
+          business_name?: string
+          business_phone?: string
+          business_type?: string
+          business_website?: string | null
+          created_at?: string
+          id?: string
+          onboarding_complete?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null

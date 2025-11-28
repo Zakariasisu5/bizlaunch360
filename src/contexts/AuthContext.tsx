@@ -3,18 +3,23 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
+interface Business {
+  id: string;
+  businessName: string;
+  businessType: string;
+  businessDescription?: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessEmail: string;
+  businessWebsite?: string;
+}
+
 interface User {
   id: string;
   email: string;
   name: string;
-  businessName?: string;
-  businessType?: string;
-  businessAddress?: string;
-  businessPhone?: string;
-  businessEmail?: string;
-  businessWebsite?: string;
-  businessDescription?: string;
-  onboardingComplete?: boolean;
+  business?: Business;
+  onboardingComplete: boolean;
 }
 
 interface AuthContextType {
@@ -51,19 +56,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSession(session);
         
         if (session?.user) {
-          // Defer profile fetching to avoid blocking auth state changes
+          // Defer profile and business fetching to avoid blocking auth state changes
           setTimeout(async () => {
             try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .maybeSingle();
+              const [profileResult, businessResult] = await Promise.all([
+                supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('user_id', session.user.id)
+                  .maybeSingle(),
+                supabase
+                  .from('businesses')
+                  .select('*')
+                  .eq('user_id', session.user.id)
+                  .maybeSingle()
+              ]);
+              
+              const profile = profileResult.data;
+              const business = businessResult.data;
               
               const userData: User = {
                 id: session.user.id,
                 email: session.user.email || '',
-                name: profile?.full_name || session.user.user_metadata?.full_name || 'User'
+                name: profile?.full_name || session.user.user_metadata?.full_name || 'User',
+                onboardingComplete: business?.onboarding_complete || false,
+                business: business ? {
+                  id: business.id,
+                  businessName: business.business_name,
+                  businessType: business.business_type,
+                  businessDescription: business.business_description || undefined,
+                  businessAddress: business.business_address,
+                  businessPhone: business.business_phone,
+                  businessEmail: business.business_email,
+                  businessWebsite: business.business_website || undefined,
+                } : undefined
               };
               
               setUser(userData);
@@ -73,7 +99,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               const userData: User = {
                 id: session.user.id,
                 email: session.user.email || '',
-                name: session.user.user_metadata?.full_name || 'User'
+                name: session.user.user_metadata?.full_name || 'User',
+                onboardingComplete: false
               };
               setUser(userData);
             }
