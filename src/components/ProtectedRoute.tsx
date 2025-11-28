@@ -1,21 +1,28 @@
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireOnboarding?: boolean;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!isLoading && !user) {
       navigate('/login');
+    } else if (!isLoading && user && requireOnboarding && !user.onboardingComplete) {
+      // Redirect to onboarding if user hasn't completed it
+      if (location.pathname !== '/onboarding') {
+        navigate('/onboarding');
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, requireOnboarding, location.pathname]);
 
   if (isLoading) {
     return (
@@ -29,6 +36,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
+    return null;
+  }
+
+  // Block access if onboarding is required but not complete
+  if (requireOnboarding && !user.onboardingComplete) {
     return null;
   }
 

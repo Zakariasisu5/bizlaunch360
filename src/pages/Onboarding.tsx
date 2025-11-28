@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Rocket, Building2, User, MapPin, Phone, Mail, Globe, CheckCircle } from 'lucide-react';
+import { Rocket, Building2, Phone, Globe, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Onboarding = () => {
-  const { user, updateUser } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
@@ -25,6 +26,13 @@ const Onboarding = () => {
     businessWebsite: '',
     businessDescription: ''
   });
+
+  // Redirect if already completed onboarding
+  useEffect(() => {
+    if (!authLoading && user?.onboardingComplete) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -47,19 +55,33 @@ const Onboarding = () => {
   };
 
   const handleComplete = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      await updateUser({
-        ...formData,
-        onboardingComplete: true
-      });
+      const { error } = await supabase
+        .from('businesses')
+        .insert({
+          user_id: user.id,
+          business_name: formData.businessName,
+          business_type: formData.businessType,
+          business_description: formData.businessDescription || null,
+          business_address: formData.businessAddress,
+          business_phone: formData.businessPhone,
+          business_email: formData.businessEmail,
+          business_website: formData.businessWebsite || null,
+          onboarding_complete: true
+        });
+
+      if (error) throw error;
       
       toast({
         title: "Welcome to BizLaunch360!",
         description: "Your business profile has been set up successfully.",
       });
       
-      navigate('/dashboard', { replace: true });
+      // Force a page reload to refresh auth state with new business data
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast({
