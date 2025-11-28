@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import VideoDemo from '@/components/VideoDemo';
 import StreamingChatbot from '@/components/StreamingChatbot';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const features = [
   {
@@ -83,13 +84,14 @@ const Index = () => {
               </span>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
+              <ThemeToggle />
               <Link to="/login">
-                <Button variant="ghost" className="text-gray-600 hover:text-blue-600 text-sm sm:text-base px-2 sm:px-4">
+                <Button variant="ghost" className="text-muted-foreground hover:text-primary text-sm sm:text-base px-2 sm:px-4">
                   Login
                 </Button>
               </Link>
               <Link to="/login">
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3 rounded-xl">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3 rounded-xl">
                   Get Started
                 </Button>
               </Link>
