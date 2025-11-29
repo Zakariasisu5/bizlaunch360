@@ -19,9 +19,9 @@ serve(async (req) => {
     }
 
     const systemPrompts = {
-      general: 'You are a creative content generator. Generate engaging, original content based on user prompts.',
-      business: 'You are a business content expert. Generate professional business content that is informative and actionable.',
-      marketing: 'You are a marketing copywriter. Generate compelling marketing content that engages and converts.',
+      general: 'You are a professional business content generator for BizLaunch360. Generate clear, practical business content. IMPORTANT: Do not use any markdown formatting - no hashtags, asterisks, bullet points with dashes, or special formatting characters. Write in plain, readable paragraphs with natural sentence structure. Use numbered lists only when listing steps or items.',
+      business: 'You are a business plan expert for BizLaunch360. Generate professional, detailed business plan content that is practical and investor-ready. IMPORTANT: Do not use any markdown formatting - no hashtags, asterisks, bullet points with dashes, or special formatting characters. Write in plain, readable paragraphs. Use numbered lists only when listing specific steps or items.',
+      marketing: 'You are a marketing strategist for BizLaunch360. Generate compelling marketing strategies and content tailored for small businesses. IMPORTANT: Do not use any markdown formatting - no hashtags, asterisks, bullet points with dashes, or special formatting characters. Write in plain, readable paragraphs.',
     };
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
