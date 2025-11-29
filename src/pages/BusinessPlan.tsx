@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,17 +13,16 @@ import {
   Sparkles, 
   Download, 
   Save, 
-  Edit3, 
   Target,
   DollarSign,
   Users,
   TrendingUp,
-  Lightbulb,
   FolderOpen,
   Trash2,
   LogIn,
-  Copy,
-  Link
+  Link,
+  Building2,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBusinessPlanPDF } from '@/utils/pdfGenerator';
@@ -32,6 +30,16 @@ import { saveBusinessPlan, loadBusinessPlans, deleteBusinessPlan, loadBusinessPl
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BusinessPlanAIAssistant from '@/components/BusinessPlanAIAssistant';
+
+interface BusinessInfo {
+  business_name: string;
+  business_type: string;
+  business_description: string | null;
+  business_address: string;
+  business_email: string;
+  business_phone: string;
+  business_website: string | null;
+}
 
 const BusinessPlan = () => {
   const { toast: showToast } = useToast();
@@ -45,6 +53,7 @@ const BusinessPlan = () => {
   const [planTitle, setPlanTitle] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
   const [planData, setPlanData] = useState<BusinessPlanData>({
     executiveSummary: '',
     businessDescription: '',
@@ -57,15 +66,15 @@ const BusinessPlan = () => {
   });
 
   const steps = [
-    { id: 1, title: 'Business Overview', icon: Target },
-    { id: 2, title: 'Market Analysis', icon: Users },
-    { id: 3, title: 'Financial Planning', icon: DollarSign },
-    { id: 4, title: 'Strategy & Growth', icon: TrendingUp }
+    { id: 1, title: 'Business Overview', icon: Target, description: 'Executive summary and business description' },
+    { id: 2, title: 'Market Analysis', icon: Users, description: 'Market research and organization structure' },
+    { id: 3, title: 'Financial Planning', icon: DollarSign, description: 'Funding requirements and projections' },
+    { id: 4, title: 'Strategy & Growth', icon: TrendingUp, description: 'Products, marketing, and growth plans' }
   ];
 
-  // Check authentication status on mount
+  // Check authentication and load business info on mount
   useEffect(() => {
-    checkAuthStatus();
+    checkAuthAndLoadBusiness();
   }, []);
 
   // Load saved plans only if authenticated
@@ -75,10 +84,27 @@ const BusinessPlan = () => {
     }
   }, [isAuthenticated]);
 
-  const checkAuthStatus = async () => {
+  const checkAuthAndLoadBusiness = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
+      
+      if (user) {
+        // Fetch business info for AI context
+        const { data: business } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (business) {
+          setBusinessInfo(business);
+          // Auto-fill plan title with business name if not set
+          if (!planTitle && business.business_name) {
+            setPlanTitle(`${business.business_name} Business Plan`);
+          }
+        }
+      }
     } catch (error) {
       console.error('Error checking auth status:', error);
       setIsAuthenticated(false);
@@ -95,7 +121,6 @@ const BusinessPlan = () => {
       setSavedPlans(plans);
     } catch (error) {
       console.error('Error loading saved plans:', error);
-      // Don't show error toast for auth issues, just log
       if (error instanceof Error && !error.message.includes('authenticated')) {
         showToast({
           title: "Error",
@@ -122,6 +147,7 @@ const BusinessPlan = () => {
         body: {
           title: planTitle.trim(),
           context: planData,
+          businessInfo: businessInfo, // Pass business context
         },
       });
 
@@ -148,9 +174,15 @@ const BusinessPlan = () => {
       toast.success('AI business plan generated successfully!');
     } catch (err: any) {
       console.error('AI generation error:', err);
+      let errorMessage = 'Unable to generate content. Please try again.';
+      if (err?.message?.includes('Rate limit')) {
+        errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+      } else if (err?.message?.includes('402') || err?.message?.includes('credits')) {
+        errorMessage = 'AI usage limit reached. Please add credits to continue.';
+      }
       showToast({
         title: 'Generation Failed',
-        description: err?.message || 'Unable to generate content. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -310,7 +342,7 @@ const BusinessPlan = () => {
 
   const handleNewPlan = () => {
     setCurrentPlanId(null);
-    setPlanTitle('');
+    setPlanTitle(businessInfo?.business_name ? `${businessInfo.business_name} Business Plan` : '');
     setPlanData({
       executiveSummary: '',
       businessDescription: '',
@@ -332,11 +364,11 @@ const BusinessPlan = () => {
         {/* Header */}
         <div className="space-y-4">
           <div className="text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-bold text-bizNeutral-900">Business Plan Generator</h1>
-            <p className="text-bizNeutral-600 mt-2 text-sm md:text-base">Create a comprehensive business plan with AI assistance</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Business Plan Generator</h1>
+            <p className="text-muted-foreground mt-2 text-sm md:text-base">Create a comprehensive, investor-ready business plan with AI assistance</p>
           </div>
           
-          {/* Action Buttons - Mobile First */}
+          {/* Action Buttons */}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center md:justify-start">
             <Dialog open={showSavedPlans} onOpenChange={setShowSavedPlans}>
               <DialogTrigger asChild>
@@ -433,15 +465,51 @@ const BusinessPlan = () => {
               Copy Link
             </Button>
             
-            <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF} className="w-full sm:w-auto btn-primary">
+            <Button onClick={handleDownloadPDF} disabled={isGeneratingPDF} className="w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" />
               {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
             </Button>
           </div>
         </div>
 
+        {/* Business Context Card */}
+        {businessInfo && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start gap-3">
+                <Building2 className="h-5 w-5 text-primary mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm">Your Business Context</span>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">AI will use this</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>{businessInfo.business_name}</strong> • {businessInfo.business_type}
+                    {businessInfo.business_description && ` • ${businessInfo.business_description.substring(0, 100)}${businessInfo.business_description.length > 100 ? '...' : ''}`}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Plan Title Input */}
+        {!businessInfo && isAuthenticated && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Complete Your Business Profile</p>
+                  <p className="text-sm text-amber-700">
+                    Add your business information in Settings to get more personalized AI-generated content.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Plan Title Input */}
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
@@ -457,39 +525,40 @@ const BusinessPlan = () => {
         </Card>
 
         {/* AI Generator Card */}
-        <Card className="gradient-card border-2 border-bizPrimary/20">
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Sparkles className="h-5 w-5 text-bizPrimary mr-2" />
+              <Sparkles className="h-5 w-5 text-primary mr-2" />
               AI Business Plan Generator
             </CardTitle>
             <CardDescription>
-              Let our AI create a comprehensive business plan tailored to your business
+              Generate a comprehensive, investor-ready business plan tailored to your business. 
+              {businessInfo && ` AI will use your ${businessInfo.business_type} business profile for personalized content.`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
               onClick={handleGenerateWithAI}
               disabled={isGenerating}
-              className="btn-primary"
+              size="lg"
             >
               {isGenerating ? (
                 <>
                   <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                  Generating Business Plan...
+                  Generating Comprehensive Plan...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generate with AI
+                  Generate Complete Business Plan
                 </>
               )}
             </Button>
             {isGenerating && (
               <div className="mt-4">
                 <Progress value={66} className="w-full" />
-                <p className="text-sm text-bizNeutral-600 mt-2">
-                  Analyzing your business data and market trends...
+                <p className="text-sm text-muted-foreground mt-2">
+                  Analyzing market data, financials, and creating your personalized business plan...
                 </p>
               </div>
             )}
@@ -498,7 +567,7 @@ const BusinessPlan = () => {
 
         {/* Business Plan Content */}
         <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
-          {/* Navigation - Mobile Horizontal Scroll */}
+          {/* Navigation */}
           <div className="lg:col-span-1 order-2 lg:order-1">
             <Card className="sticky top-4">
               <CardHeader className="pb-3">
@@ -506,7 +575,6 @@ const BusinessPlan = () => {
                 <Progress value={progressPercentage} className="w-full" />
               </CardHeader>
               <CardContent className="space-y-2">
-                {/* Mobile: Horizontal scroll, Desktop: Vertical stack */}
                 <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
                   {steps.map((step) => {
                     const Icon = step.icon;
@@ -528,7 +596,7 @@ const BusinessPlan = () => {
             </Card>
           </div>
 
-          {/* Content - Always visible, better mobile spacing */}
+          {/* Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Tabs value="edit" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -542,20 +610,23 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Executive Summary</CardTitle>
-                        <CardDescription className="text-sm">A brief overview of your business concept and key success factors</CardDescription>
+                        <CardDescription className="text-sm">
+                          The most critical section - investors read this first. Include your mission, value proposition, and key highlights.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Describe your business concept, mission, and key success factors..."
+                          placeholder="Describe your business concept, mission, unique value proposition, and key success factors..."
                           value={planData.executiveSummary}
                           onChange={(e) => setPlanData({ ...planData, executiveSummary: e.target.value })}
-                          rows={6}
-                          className="min-h-[120px] text-sm"
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="executiveSummary"
                           currentContent={planData.executiveSummary}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, executiveSummary: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -563,11 +634,13 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Business Description</CardTitle>
-                        <CardDescription className="text-sm">Detailed description of your business, products, and services</CardDescription>
+                        <CardDescription className="text-sm">
+                          Detail your business model, products/services, target market, and competitive advantages.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Provide detailed information about your business, what you offer, and your target market..."
+                          placeholder="Provide detailed information about your business model, what you offer, revenue streams, and target market..."
                           value={planData.businessDescription}
                           onChange={(e) => setPlanData({ ...planData, businessDescription: e.target.value })}
                           rows={8}
@@ -577,6 +650,7 @@ const BusinessPlan = () => {
                           section="businessDescription"
                           currentContent={planData.businessDescription}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, businessDescription: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -588,20 +662,23 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Market Analysis</CardTitle>
-                        <CardDescription className="text-sm">Analysis of your target market, competition, and industry trends</CardDescription>
+                        <CardDescription className="text-sm">
+                          Include TAM/SAM/SOM, competitor analysis, market trends, and SWOT analysis.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Analyze your target market, competitors, market size, and industry trends..."
+                          placeholder="Analyze your target market size (TAM, SAM, SOM), competitors, market trends, and include a SWOT analysis..."
                           value={planData.marketAnalysis}
                           onChange={(e) => setPlanData({ ...planData, marketAnalysis: e.target.value })}
-                          rows={8}
-                          className="min-h-[160px] text-sm"
+                          rows={10}
+                          className="min-h-[200px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="marketAnalysis"
                           currentContent={planData.marketAnalysis}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, marketAnalysis: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -609,20 +686,23 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Organization & Management</CardTitle>
-                        <CardDescription className="text-sm">Your organizational structure and key team members</CardDescription>
+                        <CardDescription className="text-sm">
+                          Describe your team structure, key personnel, advisors, and company culture.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Describe your organizational structure, key team members, and their roles..."
+                          placeholder="Describe your organizational structure, key team members with their experience, advisory board, and company culture..."
                           value={planData.organization}
                           onChange={(e) => setPlanData({ ...planData, organization: e.target.value })}
-                          rows={6}
-                          className="min-h-[120px] text-sm"
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="organization"
                           currentContent={planData.organization}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, organization: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -633,21 +713,24 @@ const BusinessPlan = () => {
                   <div className="space-y-4 sm:space-y-6">
                     <Card>
                       <CardHeader className="pb-4">
-                        <CardTitle className="text-lg sm:text-xl">Funding Request</CardTitle>
-                        <CardDescription className="text-sm">Your funding requirements and how you plan to use the funds</CardDescription>
+                        <CardTitle className="text-lg sm:text-xl">Funding Requirements</CardTitle>
+                        <CardDescription className="text-sm">
+                          Detail your capital needs, use of funds, funding sources, and investor value proposition.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Describe your funding needs, sources, and planned use of funds..."
+                          placeholder="Describe your funding needs with specific amounts, how funds will be used, potential funding sources, and expected returns..."
                           value={planData.funding}
                           onChange={(e) => setPlanData({ ...planData, funding: e.target.value })}
-                          rows={6}
-                          className="min-h-[120px] text-sm"
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="funding"
                           currentContent={planData.funding}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, funding: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -655,20 +738,23 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Financial Projections</CardTitle>
-                        <CardDescription className="text-sm">Revenue forecasts, expense projections, and profitability analysis</CardDescription>
+                        <CardDescription className="text-sm">
+                          Provide 3-year projections, break-even analysis, key metrics (gross margin, CAC, LTV), and assumptions.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Include revenue projections, expense forecasts, break-even analysis, and cash flow statements..."
+                          placeholder="Include 3-year revenue projections, expense forecasts, break-even analysis, key financial metrics, and clearly state your assumptions..."
                           value={planData.financials}
                           onChange={(e) => setPlanData({ ...planData, financials: e.target.value })}
-                          rows={8}
-                          className="min-h-[160px] text-sm"
+                          rows={10}
+                          className="min-h-[200px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="financials"
                           currentContent={planData.financials}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, financials: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -680,20 +766,23 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Products & Services</CardTitle>
-                        <CardDescription className="text-sm">Detailed description of your offerings and pricing strategy</CardDescription>
+                        <CardDescription className="text-sm">
+                          Describe your offerings, pricing strategy, product roadmap, and differentiation.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Describe your products or services, pricing strategy, and competitive advantages..."
+                          placeholder="Describe your products/services in detail, pricing strategy with justification, product roadmap, and competitive differentiation..."
                           value={planData.products}
                           onChange={(e) => setPlanData({ ...planData, products: e.target.value })}
-                          rows={6}
-                          className="min-h-[120px] text-sm"
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="products"
                           currentContent={planData.products}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, products: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
@@ -701,27 +790,30 @@ const BusinessPlan = () => {
                     <Card>
                       <CardHeader className="pb-4">
                         <CardTitle className="text-lg sm:text-xl">Marketing & Sales Strategy</CardTitle>
-                        <CardDescription className="text-sm">How you plan to attract and retain customers</CardDescription>
+                        <CardDescription className="text-sm">
+                          Detail your marketing channels, customer acquisition strategy, sales funnel, and retention programs.
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <Textarea
-                          placeholder="Outline your marketing strategy, sales process, and customer acquisition plans..."
+                          placeholder="Outline your brand positioning, marketing channels, customer acquisition strategy with CAC, sales funnel, and retention programs..."
                           value={planData.marketing}
                           onChange={(e) => setPlanData({ ...planData, marketing: e.target.value })}
-                          rows={6}
-                          className="min-h-[120px] text-sm"
+                          rows={8}
+                          className="min-h-[160px] text-sm"
                         />
                         <BusinessPlanAIAssistant
                           section="marketing"
                           currentContent={planData.marketing}
                           onSuggestionGenerated={(content) => setPlanData({ ...planData, marketing: content })}
+                          planTitle={planTitle}
                         />
                       </CardContent>
                     </Card>
                   </div>
                 )}
 
-                {/* Navigation Buttons - Better mobile layout */}
+                {/* Navigation Buttons */}
                 <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t">
                   <Button
                     variant="outline"
@@ -734,7 +826,7 @@ const BusinessPlan = () => {
                   <Button
                     onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
                     disabled={currentStep === 4}
-                    className="w-full sm:w-auto btn-primary order-1 sm:order-2"
+                    className="w-full sm:w-auto order-1 sm:order-2"
                   >
                     Next
                   </Button>
@@ -745,62 +837,62 @@ const BusinessPlan = () => {
                 <Card>
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg sm:text-xl">Business Plan Preview</CardTitle>
-                    <CardDescription className="text-sm">Review your complete business plan</CardDescription>
+                    <CardDescription className="text-sm">Review your complete business plan before downloading</CardDescription>
                   </CardHeader>
                   <CardContent className="prose prose-sm sm:prose max-w-none">
                     <div className="space-y-6 sm:space-y-8">
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Executive Summary</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Executive Summary</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.executiveSummary || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Business Description</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Business Description</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.businessDescription || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Market Analysis</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Market Analysis</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.marketAnalysis || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Organization & Management</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Organization & Management</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.organization || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Products & Services</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Products & Services</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.products || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Marketing & Sales</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Marketing & Sales</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.marketing || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Funding Request</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Funding Requirements</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.funding || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
 
                       <section>
-                        <h2 className="text-lg sm:text-xl font-bold text-bizNeutral-900 mb-3 sm:mb-4">Financial Projections</h2>
-                        <div className="whitespace-pre-wrap text-bizNeutral-700 text-sm sm:text-base leading-relaxed">
+                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Financial Projections</h2>
+                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
                           {planData.financials || 'No content yet. Use the AI generator or edit manually.'}
                         </div>
                       </section>
