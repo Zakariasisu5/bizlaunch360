@@ -116,11 +116,11 @@ const Finance = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid': return 'bg-bizSuccess text-white';
-      case 'sent': return 'bg-bizPrimary text-white';
-      case 'overdue': return 'bg-bizError text-white';
-      case 'draft': return 'bg-bizNeutral-200 text-bizNeutral-800';
-      default: return 'bg-bizNeutral-200 text-bizNeutral-800';
+      case 'paid': return 'bg-emerald-500 text-white';
+      case 'sent': return 'bg-primary text-primary-foreground';
+      case 'overdue': return 'bg-destructive text-destructive-foreground';
+      case 'draft': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -230,10 +230,10 @@ const Finance = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-bizNeutral-900">Finance & Invoicing</h1>
-            <p className="text-bizNeutral-600 mt-2">Manage your invoices, expenses, and financial health</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Finance & Invoicing</h1>
+            <p className="text-muted-foreground mt-2">Manage your invoices, expenses, and financial health</p>
           </div>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
             <Dialog>
@@ -370,15 +370,15 @@ const Finance = () => {
 
           <TabsContent value="overview" className="space-y-6">
             {/* Financial Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-bizNeutral-600">Total Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-bizSuccess" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+                  <DollarSign className="h-4 w-4 text-emerald-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-bizNeutral-900">${totalRevenue.toLocaleString()}</div>
-                  <div className="flex items-center text-xs text-bizSuccess">
+                  <div className="text-2xl font-bold text-foreground">${totalRevenue.toLocaleString()}</div>
+                  <div className="flex items-center text-xs text-emerald-500">
                     <TrendingUp className="h-3 w-3 mr-1" />
                     +12% from last month
                   </div>
@@ -387,12 +387,12 @@ const Finance = () => {
 
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-bizNeutral-600">Pending Revenue</CardTitle>
-                  <Calendar className="h-4 w-4 text-bizPrimary" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Pending Revenue</CardTitle>
+                  <Calendar className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-bizNeutral-900">${pendingRevenue.toLocaleString()}</div>
-                  <div className="text-xs text-bizNeutral-500">
+                  <div className="text-2xl font-bold text-foreground">${pendingRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">
                     {invoices.filter(inv => inv.status === 'sent').length} pending invoices
                   </div>
                 </CardContent>
@@ -400,12 +400,12 @@ const Finance = () => {
 
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-bizNeutral-600">Overdue</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-bizError" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Overdue</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-destructive" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-bizError">${overdueRevenue.toLocaleString()}</div>
-                  <div className="text-xs text-bizNeutral-500">
+                  <div className="text-2xl font-bold text-destructive">${overdueRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">
                     {invoices.filter(inv => inv.status === 'overdue').length} overdue invoices
                   </div>
                 </CardContent>
@@ -413,12 +413,12 @@ const Finance = () => {
 
               <Card className="card-hover">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-bizNeutral-600">Total Expenses</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-bizWarning" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-amber-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-bizNeutral-900">${totalExpenses.toLocaleString()}</div>
-                  <div className="text-xs text-bizNeutral-500">
+                  <div className="text-2xl font-bold text-foreground">${totalExpenses.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">
                     {expenses.length} expenses this month
                   </div>
                 </CardContent>
@@ -426,7 +426,7 @@ const Finance = () => {
             </div>
 
             {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Invoices</CardTitle>
@@ -437,11 +437,11 @@ const Finance = () => {
                     {invoices.slice(0, 5).map((invoice) => (
                       <div key={invoice.id} className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium text-bizNeutral-900">{invoice.number}</div>
-                          <div className="text-sm text-bizNeutral-600">{invoice.customer}</div>
+                          <div className="font-medium text-foreground">{invoice.number}</div>
+                          <div className="text-sm text-muted-foreground">{invoice.customer}</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium text-bizNeutral-900">${invoice.amount}</div>
+                          <div className="font-medium text-foreground">${invoice.amount}</div>
                           <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
                         </div>
                       </div>

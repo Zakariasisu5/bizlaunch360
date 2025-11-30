@@ -145,10 +145,10 @@ const Dashboard = () => {
   }
 
   const quickActions = [
-    { title: 'Create Invoice', icon: DollarSign, href: '/finance', color: 'bg-bizSuccess' },
-    { title: 'Add Customer', icon: Users, href: '/crm', color: 'bg-bizPrimary' },
-    { title: 'Schedule Meeting', icon: Calendar, href: '/appointments', color: 'bg-bizAccent' },
-    { title: 'Business Plan', icon: FileText, href: '/business-plan', color: 'bg-bizWarning' },
+    { title: 'Create Invoice', icon: DollarSign, href: '/finance', color: 'bg-emerald-500' },
+    { title: 'Add Customer', icon: Users, href: '/crm', color: 'bg-primary' },
+    { title: 'Schedule Meeting', icon: Calendar, href: '/appointments', color: 'bg-indigo-500' },
+    { title: 'Business Plan', icon: FileText, href: '/business-plan', color: 'bg-amber-500' },
   ];
 
   const recentActivities = [
@@ -163,17 +163,17 @@ const Dashboard = () => {
       <div className="space-y-8">
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Monthly Revenue
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-bizSuccess" />
+              <DollarSign className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">${dashboardData.monthlyRevenue.toLocaleString()}</div>
-              <div className="flex items-center text-xs text-bizNeutral-500">
+              <div className="text-2xl font-bold text-foreground">${dashboardData.monthlyRevenue.toLocaleString()}</div>
+              <div className="flex items-center text-xs text-muted-foreground">
                 Current month
               </div>
             </CardContent>
@@ -181,14 +181,14 @@ const Dashboard = () => {
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Customers
               </CardTitle>
-              <Users className="h-4 w-4 text-bizPrimary" />
+              <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{dashboardData.totalCustomers}</div>
-              <div className="flex items-center text-xs text-bizNeutral-500">
+              <div className="text-2xl font-bold text-foreground">{dashboardData.totalCustomers}</div>
+              <div className="flex items-center text-xs text-muted-foreground">
                 All time
               </div>
             </CardContent>
@@ -196,14 +196,14 @@ const Dashboard = () => {
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Appointments This Week
               </CardTitle>
-              <Calendar className="h-4 w-4 text-bizAccent" />
+              <Calendar className="h-4 w-4 text-indigo-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{dashboardData.appointmentsThisWeek}</div>
-              <div className="flex items-center text-xs text-bizNeutral-500">
+              <div className="text-2xl font-bold text-foreground">{dashboardData.appointmentsThisWeek}</div>
+              <div className="flex items-center text-xs text-muted-foreground">
                 <Clock className="h-3 w-3 mr-1" />
                 Next 7 days
               </div>
@@ -212,14 +212,14 @@ const Dashboard = () => {
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Growth Rate
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-bizWarning" />
+              <TrendingUp className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">24%</div>
-              <div className="flex items-center text-xs text-bizSuccess">
+              <div className="text-2xl font-bold text-foreground">24%</div>
+              <div className="flex items-center text-xs text-emerald-500">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 Quarterly growth
               </div>
@@ -268,15 +268,15 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
+          <div className="xl:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
                 <CardDescription>Common tasks to help you manage your business</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2 gap-4">
                   {quickActions.map((action, index) => {
                     const Icon = action.icon;
                     return (
@@ -308,14 +308,14 @@ const Dashboard = () => {
                 {recentActivities.map((activity, index) => (
                   <div key={index} className="flex items-start space-x-3">
                     <div className="flex-shrink-0">
-                      {activity.type === 'payment' && <DollarSign className="h-4 w-4 text-bizSuccess" />}
-                      {activity.type === 'customer' && <Users className="h-4 w-4 text-bizPrimary" />}
-                      {activity.type === 'appointment' && <Calendar className="h-4 w-4 text-bizAccent" />}
-                      {activity.type === 'plan' && <FileText className="h-4 w-4 text-bizWarning" />}
+                      {activity.type === 'payment' && <DollarSign className="h-4 w-4 text-emerald-500" />}
+                      {activity.type === 'customer' && <Users className="h-4 w-4 text-primary" />}
+                      {activity.type === 'appointment' && <Calendar className="h-4 w-4 text-indigo-500" />}
+                      {activity.type === 'plan' && <FileText className="h-4 w-4 text-amber-500" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-bizNeutral-900">{activity.title}</p>
-                      <p className="text-xs text-bizNeutral-500">{activity.time}</p>
+                      <p className="text-sm font-medium text-foreground">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground">{activity.time}</p>
                     </div>
                   </div>
                 ))}
@@ -332,29 +332,29 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-bizNeutral-900">Overall Score: 85/100</span>
-                <span className="text-sm text-bizSuccess font-medium">Excellent</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-lg font-semibold text-foreground">Overall Score: 85/100</span>
+                <span className="text-sm text-emerald-500 font-medium">Excellent</span>
               </div>
               <Progress value={85} className="h-2" />
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="text-center p-4 bg-bizSuccess/10 rounded-lg">
-                  <CheckCircle className="h-8 w-8 text-bizSuccess mx-auto mb-2" />
-                  <div className="font-semibold text-bizNeutral-900">Revenue Growth</div>
-                  <div className="text-sm text-bizNeutral-600">Strong upward trend</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                <div className="text-center p-4 bg-emerald-500/10 rounded-lg">
+                  <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                  <div className="font-semibold text-foreground">Revenue Growth</div>
+                  <div className="text-sm text-muted-foreground">Strong upward trend</div>
                 </div>
                 
-                <div className="text-center p-4 bg-bizSuccess/10 rounded-lg">
-                  <CheckCircle className="h-8 w-8 text-bizSuccess mx-auto mb-2" />
-                  <div className="font-semibold text-bizNeutral-900">Customer Retention</div>
-                  <div className="text-sm text-bizNeutral-600">Above industry average</div>
+                <div className="text-center p-4 bg-emerald-500/10 rounded-lg">
+                  <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                  <div className="font-semibold text-foreground">Customer Retention</div>
+                  <div className="text-sm text-muted-foreground">Above industry average</div>
                 </div>
                 
-                <div className="text-center p-4 bg-bizWarning/10 rounded-lg">
-                  <Clock className="h-8 w-8 text-bizWarning mx-auto mb-2" />
-                  <div className="font-semibold text-bizNeutral-900">Cash Flow</div>
-                  <div className="text-sm text-bizNeutral-600">Needs attention</div>
+                <div className="text-center p-4 bg-amber-500/10 rounded-lg">
+                  <Clock className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+                  <div className="font-semibold text-foreground">Cash Flow</div>
+                  <div className="text-sm text-muted-foreground">Needs attention</div>
                 </div>
               </div>
             </div>

@@ -111,11 +111,11 @@ const CRM = () => {
 
   const getStatusColor = (status: Customer['status']) => {
     switch (status) {
-      case 'active': return 'bg-bizSuccess text-white';
-      case 'lead': return 'bg-bizPrimary text-white';
-      case 'prospect': return 'bg-bizWarning text-white';
-      case 'inactive': return 'bg-bizNeutral-400 text-white';
-      default: return 'bg-bizNeutral-400 text-white';
+      case 'active': return 'bg-emerald-500 text-white';
+      case 'lead': return 'bg-primary text-primary-foreground';
+      case 'prospect': return 'bg-amber-500 text-white';
+      case 'inactive': return 'bg-muted text-muted-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -126,70 +126,70 @@ const CRM = () => {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-bizNeutral-900">Customer Management</h1>
-            <p className="text-bizNeutral-600 mt-1">Manage your customers and track relationships</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Customer Management</h1>
+            <p className="text-muted-foreground mt-1">Manage your customers and track relationships</p>
           </div>
-          <Button className="btn-primary">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <UserPlus className="h-4 w-4 mr-2" />
             Add Customer
           </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Customers
               </CardTitle>
-              <Users className="h-4 w-4 text-bizPrimary" />
+              <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{totalCustomers}</div>
-              <p className="text-xs text-bizNeutral-500">All time</p>
+              <div className="text-2xl font-bold text-foreground">{totalCustomers}</div>
+              <p className="text-xs text-muted-foreground">All time</p>
             </CardContent>
           </Card>
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Active Customers
               </CardTitle>
-              <Users className="h-4 w-4 text-bizSuccess" />
+              <Users className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{activeCustomers}</div>
-              <p className="text-xs text-bizSuccess">Currently active</p>
+              <div className="text-2xl font-bold text-foreground">{activeCustomers}</div>
+              <p className="text-xs text-emerald-500">Currently active</p>
             </CardContent>
           </Card>
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Revenue
               </CardTitle>
-              <Users className="h-4 w-4 text-bizWarning" />
+              <Users className="h-4 w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">${totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-bizNeutral-500">From all customers</p>
+              <div className="text-2xl font-bold text-foreground">${totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">From all customers</p>
             </CardContent>
           </Card>
 
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-bizNeutral-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 New Leads
               </CardTitle>
-              <Users className="h-4 w-4 text-bizAccent" />
+              <Users className="h-4 w-4 text-indigo-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-bizNeutral-900">{newLeads}</div>
-              <p className="text-xs text-bizAccent">This month</p>
+              <div className="text-2xl font-bold text-foreground">{newLeads}</div>
+              <p className="text-xs text-indigo-500">This month</p>
             </CardContent>
           </Card>
         </div>
@@ -197,7 +197,7 @@ const CRM = () => {
         {/* Filters and Search */}
         <Card>
           <CardHeader>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div>
                 <CardTitle>Customer List</CardTitle>
                 <CardDescription>Manage and track all your customers</CardDescription>
@@ -217,7 +217,7 @@ const CRM = () => {
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-bizNeutral-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search customers..."
                   value={searchTerm}
@@ -228,7 +228,7 @@ const CRM = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                className="px-3 py-2 border border-bizNeutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-bizPrimary"
+                className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -241,17 +241,17 @@ const CRM = () => {
             {/* Customer List */}
             <div className="space-y-4">
               {filteredCustomers.map((customer) => (
-                <div key={customer.id} className="border border-bizNeutral-200 rounded-lg p-4 hover:shadow-soft transition-shadow">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex-1">
+                <div key={customer.id} className="border border-border rounded-lg p-4 hover:shadow-soft transition-shadow">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-bizNeutral-900">{customer.name}</h3>
+                        <h3 className="font-semibold text-foreground">{customer.name}</h3>
                         <Badge className={getStatusColor(customer.status)}>
                           {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
                         </Badge>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-bizNeutral-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4" />
                           {customer.email}
@@ -274,27 +274,27 @@ const CRM = () => {
                         )}
                       </div>
                       
-                      <div className="mt-2 flex items-center gap-4 text-sm">
-                        <span className="text-bizNeutral-600">
-                          Total Spent: <span className="font-medium text-bizNeutral-900">${customer.totalSpent.toLocaleString()}</span>
+                      <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
+                        <span className="text-muted-foreground">
+                          Total Spent: <span className="font-medium text-foreground">${customer.totalSpent.toLocaleString()}</span>
                         </span>
-                        <span className="text-bizNeutral-600">
-                          Last Contact: <span className="font-medium text-bizNeutral-900">{customer.lastContact}</span>
+                        <span className="text-muted-foreground">
+                          Last Contact: <span className="font-medium text-foreground">{customer.lastContact}</span>
                         </span>
                       </div>
                       
                       {customer.notes && (
-                        <div className="mt-2 text-sm text-bizNeutral-600">
+                        <div className="mt-2 text-sm text-muted-foreground">
                           <span className="font-medium">Notes:</span> {customer.notes}
                         </div>
                       )}
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="text-bizError hover:text-bizError">
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -305,9 +305,9 @@ const CRM = () => {
             
             {filteredCustomers.length === 0 && (
               <div className="text-center py-8">
-                <Users className="h-12 w-12 text-bizNeutral-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-bizNeutral-900 mb-2">No customers found</h3>
-                <p className="text-bizNeutral-600">Try adjusting your search or filters</p>
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No customers found</h3>
+                <p className="text-muted-foreground">Try adjusting your search or filters</p>
               </div>
             )}
           </CardContent>
