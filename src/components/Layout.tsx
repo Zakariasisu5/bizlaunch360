@@ -47,79 +47,82 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-card shadow-soft transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-card shadow-soft transform transition-transform duration-300 ease-in-out
+        lg:relative lg:translate-x-0 lg:flex-shrink-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="flex items-center justify-between h-16 px-6 gradient-hero">
-          <h1 className="text-xl font-bold text-white">BizLaunch360</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden text-white hover:bg-white/20"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <nav className="mt-8 px-4">
-          <div className="space-y-2">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.href;
-              
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`
-                    flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200
-                    ${isActive 
-                      ? 'bg-bizPrimary text-white shadow-soft' 
-                      : 'text-bizNeutral-700 hover:bg-bizNeutral-100 hover:text-bizPrimary'
-                    }
-                  `}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-bizNeutral-200">
-            <div className="px-4 py-3 text-sm text-bizNeutral-600">
-              <div className="font-medium">{user?.name}</div>
-              <div className="text-xs">{user?.email}</div>
-            </div>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between h-16 px-6 gradient-hero">
+            <h1 className="text-xl font-bold text-white">BizLaunch360</h1>
             <Button
               variant="ghost"
-              className="w-full justify-start px-4 py-3 text-sm font-medium text-bizNeutral-700 hover:bg-bizNeutral-100 hover:text-bizError"
-              onClick={handleLogout}
+              size="sm"
+              className="lg:hidden text-white hover:bg-white/20"
+              onClick={() => setSidebarOpen(false)}
             >
-              <LogOut className="mr-3 h-5 w-5" />
-              Logout
+              <X className="h-5 w-5" />
             </Button>
           </div>
-        </nav>
-      </div>
+
+          <nav className="flex-1 mt-8 px-4 overflow-y-auto">
+            <div className="space-y-2">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`
+                      flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200
+                      ${isActive 
+                        ? 'bg-primary text-primary-foreground shadow-soft' 
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }
+                    `}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className="mr-3 h-5 w-5" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-border">
+              <div className="px-4 py-3 text-sm text-muted-foreground">
+                <div className="font-medium text-foreground">{user?.name}</div>
+                <div className="text-xs">{user?.email}</div>
+              </div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-destructive"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-3 h-5 w-5" />
+                Logout
+              </Button>
+            </div>
+          </nav>
+        </div>
+      </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="bg-card shadow-sm border-b border">
+        <header className="bg-card shadow-sm border-b border-border sticky top-0 z-30">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <Button
@@ -131,15 +134,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Menu className="h-5 w-5" />
               </Button>
               
+              <div className="flex-1" />
+              
               <div className="flex items-center gap-2">
                 <ThemeToggle />
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {children}
         </main>
       </div>

@@ -202,18 +202,18 @@ const Settings = () => {
 
   return (
     <Layout>
-      <div className="font-montserrat font-bold space-y-6">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Settings</h1>
             <p className="text-muted-foreground mt-2">Manage your account, business, and application preferences</p>
           </div>
           <ThemeToggle />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="business">Business</TabsTrigger>
             <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
@@ -231,16 +231,16 @@ const Settings = () => {
                 <CardDescription>Update your personal details and contact information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center space-x-6">
-                  <div className="h-20 w-20 bg-bizPrimary/10 rounded-full flex items-center justify-center">
-                    <User className="h-10 w-10 text-bizPrimary" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                  <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                    <User className="h-10 w-10 text-primary" />
                   </div>
                   <div>
                     <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Photo
                     </Button>
-                    <p className="text-sm text-bizNeutral-500 mt-1">JPG, PNG up to 2MB</p>
+                    <p className="text-sm text-muted-foreground mt-1">JPG, PNG up to 2MB</p>
                   </div>
                 </div>
 
@@ -299,7 +299,7 @@ const Settings = () => {
                   />
                 </div>
 
-                <Button onClick={handleSaveProfile} disabled={isSaving} className="btn-primary">
+                <Button onClick={handleSaveProfile} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Save className="h-4 w-4 mr-2" />
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -317,16 +317,16 @@ const Settings = () => {
                 <CardDescription>Manage your business profile and branding</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center space-x-6">
-                  <div className="h-20 w-20 bg-bizAccent/10 rounded-full flex items-center justify-center">
-                    <Building className="h-10 w-10 text-bizAccent" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                  <div className="h-20 w-20 bg-indigo-500/10 rounded-full flex items-center justify-center shrink-0">
+                    <Building className="h-10 w-10 text-indigo-500" />
                   </div>
                   <div>
                     <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Logo
                     </Button>
-                    <p className="text-sm text-bizNeutral-500 mt-1">SVG, PNG up to 2MB</p>
+                    <p className="text-sm text-muted-foreground mt-1">SVG, PNG up to 2MB</p>
                   </div>
                 </div>
 
@@ -397,7 +397,7 @@ const Settings = () => {
                   />
                 </div>
 
-                <Button onClick={handleSaveBusiness} disabled={isSaving} className="btn-primary">
+                <Button onClick={handleSaveBusiness} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Save className="h-4 w-4 mr-2" />
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </Button>
@@ -509,7 +509,7 @@ const Settings = () => {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <Button onClick={handleSaveInvoice} disabled={isSaving} className="btn-primary">
+                  <Button onClick={handleSaveInvoice} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Save className="h-4 w-4 mr-2" />
                     {isSaving ? 'Saving...' : 'Save Settings'}
                   </Button>
@@ -536,7 +536,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <div className="text-sm font-medium">Email Notifications</div>
-                      <div className="text-sm text-bizNeutral-500">Receive notifications via email</div>
+                      <div className="text-sm text-muted-foreground">Receive notifications via email</div>
                     </div>
                     <Switch
                       checked={notifications.emailNotifications}
@@ -547,7 +547,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <div className="text-sm font-medium">SMS Notifications</div>
-                      <div className="text-sm text-bizNeutral-500">Receive notifications via text message</div>
+                      <div className="text-sm text-muted-foreground">Receive notifications via text message</div>
                     </div>
                     <Switch
                       checked={notifications.smsNotifications}
@@ -558,7 +558,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <div className="text-sm font-medium">Appointment Reminders</div>
-                      <div className="text-sm text-bizNeutral-500">Get reminded about upcoming appointments</div>
+                      <div className="text-sm text-muted-foreground">Get reminded about upcoming appointments</div>
                     </div>
                     <Switch
                       checked={notifications.appointmentReminders}
@@ -569,7 +569,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <div className="text-sm font-medium">Invoice Updates</div>
-                      <div className="text-sm text-bizNeutral-500">Notifications about invoice payments and overdue amounts</div>
+                      <div className="text-sm text-muted-foreground">Notifications about invoice payments and overdue amounts</div>
                     </div>
                     <Switch
                       checked={notifications.invoiceUpdates}
@@ -580,7 +580,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <div className="text-sm font-medium">Marketing Emails</div>
-                      <div className="text-sm text-bizNeutral-500">Tips, tutorials, and product updates</div>
+                      <div className="text-sm text-muted-foreground">Tips, tutorials, and product updates</div>
                     </div>
                     <Switch
                       checked={notifications.marketingEmails}
@@ -589,7 +589,7 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleSaveNotifications} disabled={isSaving} className="btn-primary">
+                <Button onClick={handleSaveNotifications} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   <Save className="h-4 w-4 mr-2" />
                   {isSaving ? 'Saving...' : 'Save Preferences'}
                 </Button>
@@ -609,7 +609,7 @@ const Settings = () => {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-medium text-bizNeutral-900 mb-2">Change Password</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-2">Change Password</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="current-password">Current Password</Label>
@@ -629,12 +629,12 @@ const Settings = () => {
                     </Button>
                   </div>
 
-                  <div className="border-t border-bizNeutral-200 pt-4">
-                    <h4 className="text-sm font-medium text-bizNeutral-900 mb-4">Two-Factor Authentication</h4>
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-sm font-medium text-foreground mb-4">Two-Factor Authentication</h4>
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <div className="text-sm font-medium">Enable 2FA</div>
-                        <div className="text-sm text-bizNeutral-500">Add an extra layer of security to your account</div>
+                        <div className="text-sm text-muted-foreground">Add an extra layer of security to your account</div>
                       </div>
                       <Button variant="outline" size="sm">
                         Enable
@@ -642,16 +642,16 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  <div className="border-t border-bizNeutral-200 pt-4">
-                    <h4 className="text-sm font-medium text-bizNeutral-900 mb-4">Login Activity</h4>
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-sm font-medium text-foreground mb-4">Login Activity</h4>
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center text-sm">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
                         <span>Last login: Jan 24, 2024 at 2:30 PM</span>
-                        <span className="text-bizNeutral-500">Chrome on Windows</span>
+                        <span className="text-muted-foreground">Chrome on Windows</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
                         <span>Previous login: Jan 23, 2024 at 9:15 AM</span>
-                        <span className="text-bizNeutral-500">Safari on iPhone</span>
+                        <span className="text-muted-foreground">Safari on iPhone</span>
                       </div>
                     </div>
                     <Button variant="outline" size="sm" className="mt-2">
@@ -659,13 +659,13 @@ const Settings = () => {
                     </Button>
                   </div>
 
-                  <div className="border-t border-bizNeutral-200 pt-4">
-                    <h4 className="text-sm font-medium text-bizError mb-4">Danger Zone</h4>
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-sm font-medium text-destructive mb-4">Danger Zone</h4>
                     <div className="space-y-2">
-                      <Button variant="outline" className="text-bizError border-bizError hover:bg-bizError hover:text-white">
+                      <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                         Delete Account
                       </Button>
-                      <p className="text-xs text-bizNeutral-500">
+                      <p className="text-xs text-muted-foreground">
                         This action cannot be undone. This will permanently delete your account and remove your data from our servers.
                       </p>
                     </div>

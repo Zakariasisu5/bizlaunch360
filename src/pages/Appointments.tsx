@@ -336,12 +336,12 @@ const Appointments = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-bizNeutral-900">Appointment Management</h1>
-            <p className="text-bizNeutral-600 mt-2">Manage your schedule and client appointments</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Appointment Management</h1>
+            <p className="text-muted-foreground mt-2">Manage your schedule and client appointments</p>
           </div>
-          <div className="flex items-center space-x-4 mt-4 sm:mt-0">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
             <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
@@ -399,7 +399,7 @@ const Appointments = () => {
                         rows={3}
                       />
                     </div>
-                    <Button onClick={handleCreateService} className="w-full btn-primary">
+                    <Button onClick={handleCreateService} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                       Add Service
                     </Button>
                   </div>
@@ -411,10 +411,10 @@ const Appointments = () => {
                         <p className="text-sm text-muted-foreground text-center py-4">No services yet. Add one above.</p>
                       ) : (
                         services.map((service) => (
-                          <div key={service.id} className="flex items-center justify-between p-3 border border-bizNeutral-200 rounded-lg">
+                          <div key={service.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
                             <div>
-                              <div className="font-medium text-bizNeutral-900">{service.name}</div>
-                              <div className="text-sm text-bizNeutral-600">{service.duration}min • ${service.price}</div>
+                              <div className="font-medium text-foreground">{service.name}</div>
+                              <div className="text-sm text-muted-foreground">{service.duration}min • ${service.price}</div>
                             </div>
                             <Button 
                               variant="ghost" 
