@@ -18,7 +18,8 @@ import {
   Shield,
   Star
 } from 'lucide-react';
-import VideoDemo from '@/components/VideoDemo';
+import ProductTour from '@/components/landing/ProductTour';
+import Testimonials from '@/components/landing/Testimonials';
 import StreamingChatbot from '@/components/StreamingChatbot';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -152,7 +153,7 @@ const Index = () => {
                 Start Free Trial
               </Button>
             </Link>
-            <VideoDemo
+            <ProductTour
               trigger={
                 <Button 
                   size="lg" 
@@ -160,7 +161,7 @@ const Index = () => {
                   className="w-full sm:w-auto border-2 border-border bg-background/50 backdrop-blur-sm hover:bg-accent text-foreground px-8 py-6 text-lg font-semibold rounded-2xl hover:-translate-y-1 transition-all duration-300"
                 >
                   <Play className="mr-2 h-5 w-5" />
-                  Watch Demo
+                  Take a Tour
                 </Button>
               }
             />
@@ -253,6 +254,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* CTA Section */}
       <section className="py-16 sm:py-24 relative overflow-hidden">
