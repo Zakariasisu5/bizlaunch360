@@ -163,7 +163,7 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
     switch (step.chart) {
       case 'revenue':
         return (
-          <div className="h-48 w-full">
+          <div className="h-36 sm:h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueData}>
                 <defs>
@@ -173,13 +173,14 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} width={30} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    fontSize: '12px'
                   }} 
                 />
                 <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={2} />
@@ -189,17 +190,18 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
         );
       case 'appointments':
         return (
-          <div className="h-48 w-full">
+          <div className="h-36 sm:h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={appointmentData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} width={25} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    fontSize: '12px'
                   }} 
                 />
                 <Bar dataKey="appointments" fill="#6366f1" radius={[4, 4, 0, 0]} />
@@ -209,15 +211,15 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
         );
       case 'customers':
         return (
-          <div className="h-48 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-36 sm:h-48 w-full flex items-center justify-center relative">
+            <ResponsiveContainer width="60%" height="100%">
               <PieChart>
                 <Pie
                   data={customerData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={40}
-                  outerRadius={70}
+                  innerRadius={25}
+                  outerRadius={50}
                   paddingAngle={5}
                   dataKey="value"
                 >
@@ -229,15 +231,16 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    fontSize: '12px'
                   }} 
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2 ml-2">
               {customerData.map((item) => (
-                <div key={item.name} className="flex items-center gap-2 text-xs">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                <div key={item.name} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full" style={{ backgroundColor: item.color }} />
                   <span className="text-muted-foreground">{item.name} ({item.value}%)</span>
                 </div>
               ))}
@@ -246,10 +249,10 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
         );
       default:
         return (
-          <div className="h-48 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl flex items-center justify-center">
+          <div className="h-36 sm:h-48 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl flex items-center justify-center">
             <div className="text-center">
-              <Icon className="h-16 w-16 text-primary mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Interactive preview</p>
+              <Icon className="h-12 w-12 sm:h-16 sm:w-16 text-primary mx-auto mb-2" />
+              <p className="text-xs sm:text-sm text-muted-foreground">Interactive preview</p>
             </div>
           </div>
         );
@@ -261,104 +264,106 @@ const ProductTour: React.FC<ProductTourProps> = ({ trigger }) => {
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-full bg-card border-border">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto bg-card border-border p-4 sm:p-6">
         <DialogTitle className="sr-only">BizLaunch360 Product Tour</DialogTitle>
         <DialogDescription className="sr-only">
           An interactive walkthrough of BizLaunch360 features including business planning, invoicing, appointments, CRM, analytics, and automation.
         </DialogDescription>
         
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Progress indicator */}
           <div className="flex items-center justify-between">
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2">
               {tourSteps.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentStep(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
+                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                     index === currentStep 
-                      ? 'w-8 bg-primary' 
+                      ? 'w-6 sm:w-8 bg-primary' 
                       : index < currentStep 
-                        ? 'w-2 bg-primary/50' 
-                        : 'w-2 bg-muted'
+                        ? 'w-1.5 sm:w-2 bg-primary/50' 
+                        : 'w-1.5 sm:w-2 bg-muted'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {currentStep + 1} of {tourSteps.length}
             </span>
           </div>
 
           {/* Content area */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Left: Feature info */}
-            <div className="space-y-4">
-              <div className={`inline-flex items-center justify-center w-14 h-14 ${step.color} rounded-2xl`}>
-                <Icon className="h-7 w-7 text-white" />
+            <div className="space-y-3 sm:space-y-4">
+              <div className={`inline-flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 ${step.color} rounded-xl sm:rounded-2xl`}>
+                <Icon className="h-5 w-5 sm:h-7 sm:w-7 text-white" />
               </div>
               
-              <h3 className="text-2xl font-bold text-foreground">{step.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-foreground">{step.title}</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{step.description}</p>
               
-              <ul className="space-y-3 mt-4">
+              <ul className="space-y-2 sm:space-y-3 mt-3 sm:mt-4">
                 {step.features.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                    <span className="text-foreground">{feature}</span>
+                  <li key={index} className="flex items-center gap-2 sm:gap-3">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 flex-shrink-0" />
+                    <span className="text-sm sm:text-base text-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* Right: Visual/Chart */}
-            <div className="bg-muted/30 rounded-xl p-4 relative overflow-hidden">
+            <div className="bg-muted/30 rounded-xl p-3 sm:p-4 relative overflow-hidden min-h-[180px] sm:min-h-[200px]">
               {renderChart()}
               
               {/* Decorative stats */}
               {step.chart === 'revenue' && (
-                <div className="absolute top-4 right-4 bg-card rounded-lg p-3 shadow-lg border border-border">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-emerald-500" />
-                    <span className="text-sm font-semibold text-foreground">+127%</span>
+                <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-card rounded-lg p-2 sm:p-3 shadow-lg border border-border">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-500" />
+                    <span className="text-xs sm:text-sm font-semibold text-foreground">+127%</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">Revenue growth</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Revenue growth</p>
                 </div>
               )}
               
               {step.chart === 'appointments' && (
-                <div className="absolute top-4 right-4 bg-card rounded-lg p-3 shadow-lg border border-border">
-                  <div className="flex items-center gap-2">
-                    <ArrowUpRight className="h-4 w-4 text-indigo-500" />
-                    <span className="text-sm font-semibold text-foreground">72</span>
+                <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-card rounded-lg p-2 sm:p-3 shadow-lg border border-border">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
+                    <span className="text-xs sm:text-sm font-semibold text-foreground">72</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">This week</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">This week</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between pt-4 border-t border-border">
+          <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border">
             <Button
               onClick={prevStep}
               variant="outline"
               disabled={currentStep === 0}
-              className="gap-2"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4"
+              size="sm"
             >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
             </Button>
             
             {currentStep === tourSteps.length - 1 ? (
-              <Button onClick={() => setIsOpen(false)} className="gap-2 bg-primary hover:bg-primary/90">
+              <Button onClick={() => setIsOpen(false)} className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90 text-xs sm:text-sm px-2 sm:px-4" size="sm">
                 Get Started
-                <ArrowUpRight className="h-4 w-4" />
+                <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             ) : (
-              <Button onClick={nextStep} className="gap-2 bg-primary hover:bg-primary/90">
+              <Button onClick={nextStep} className="gap-1 sm:gap-2 bg-primary hover:bg-primary/90 text-xs sm:text-sm px-2 sm:px-4" size="sm">
                 Next
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             )}
           </div>

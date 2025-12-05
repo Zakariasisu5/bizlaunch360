@@ -213,13 +213,15 @@ const Settings = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="business">Business</TabsTrigger>
-            <TabsTrigger value="invoicing">Invoicing</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-1">
+              <TabsTrigger value="profile" className="text-xs sm:text-sm px-3 sm:px-4">Profile</TabsTrigger>
+              <TabsTrigger value="business" className="text-xs sm:text-sm px-3 sm:px-4">Business</TabsTrigger>
+              <TabsTrigger value="invoicing" className="text-xs sm:text-sm px-3 sm:px-4">Invoicing</TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs sm:text-sm px-3 sm:px-4">Notif.</TabsTrigger>
+              <TabsTrigger value="security" className="text-xs sm:text-sm px-3 sm:px-4">Security</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="profile" className="space-y-6">
             <Card>
@@ -508,7 +510,7 @@ const Settings = () => {
                   />
                 </div>
 
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                   <Button onClick={handleSaveInvoice} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Save className="h-4 w-4 mr-2" />
                     {isSaving ? 'Saving...' : 'Save Settings'}

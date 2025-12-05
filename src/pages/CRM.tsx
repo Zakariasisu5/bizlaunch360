@@ -290,12 +290,14 @@ const CRM = () => {
                       )}
                     </div>
                     
-                    <div className="flex gap-2 shrink-0">
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
+                    <div className="flex gap-2 shrink-0 w-full lg:w-auto justify-end">
+                      <Button variant="outline" size="sm" className="flex-1 lg:flex-none">
+                        <Edit className="h-4 w-4 mr-1 lg:mr-0" />
+                        <span className="lg:hidden">Edit</span>
                       </Button>
-                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive flex-1 lg:flex-none">
+                        <Trash2 className="h-4 w-4 mr-1 lg:mr-0" />
+                        <span className="lg:hidden">Delete</span>
                       </Button>
                     </div>
                   </div>
