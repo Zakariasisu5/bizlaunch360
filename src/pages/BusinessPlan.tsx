@@ -22,7 +22,9 @@ import {
   LogIn,
   Link,
   Building2,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBusinessPlanPDF } from '@/utils/pdfGenerator';
@@ -30,6 +32,8 @@ import { saveBusinessPlan, loadBusinessPlans, deleteBusinessPlan, loadBusinessPl
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BusinessPlanAIAssistant from '@/components/BusinessPlanAIAssistant';
+import BusinessPlanCharts, { FinancialData } from '@/components/BusinessPlanCharts';
+import BusinessPlanVisuals from '@/components/BusinessPlanVisuals';
 
 interface BusinessInfo {
   business_name: string;
@@ -833,72 +837,119 @@ const BusinessPlan = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="preview" className="mt-6">
-                <Card>
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg sm:text-xl">Business Plan Preview</CardTitle>
-                    <CardDescription className="text-sm">Review your complete business plan before downloading</CardDescription>
-                  </CardHeader>
-                  <CardContent className="prose prose-sm sm:prose max-w-none">
-                    <div className="space-y-6 sm:space-y-8">
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Executive Summary</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.executiveSummary || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+              <TabsContent value="preview" className="mt-6 space-y-6">
+                {/* Preview Sub-tabs */}
+                <Tabs defaultValue="content" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="content" className="text-xs sm:text-sm">
+                      <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Content</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="charts" className="text-xs sm:text-sm">
+                      <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Charts</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="visuals" className="text-xs sm:text-sm">
+                      <Target className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Analysis</span>
+                    </TabsTrigger>
+                  </TabsList>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Business Description</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.businessDescription || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+                  {/* Content Preview */}
+                  <TabsContent value="content">
+                    <Card>
+                      <CardHeader className="pb-4">
+                        <CardTitle className="text-lg sm:text-xl">Business Plan Content</CardTitle>
+                        <CardDescription className="text-sm">Review your complete business plan before downloading</CardDescription>
+                      </CardHeader>
+                      <CardContent className="prose prose-sm sm:prose max-w-none">
+                        <div className="space-y-6 sm:space-y-8">
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Executive Summary</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.executiveSummary || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Market Analysis</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.marketAnalysis || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Business Description</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.businessDescription || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Organization & Management</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.organization || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Market Analysis</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.marketAnalysis || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Products & Services</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.products || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Organization & Management</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.organization || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Marketing & Sales</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.marketing || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Products & Services</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.products || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Funding Requirements</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.funding || 'No content yet. Use the AI generator or edit manually.'}
-                        </div>
-                      </section>
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Marketing & Sales</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.marketing || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
 
-                      <section>
-                        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Financial Projections</h2>
-                        <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
-                          {planData.financials || 'No content yet. Use the AI generator or edit manually.'}
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Funding Requirements</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.funding || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
+
+                          <section>
+                            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Financial Projections</h2>
+                            <div className="whitespace-pre-wrap text-muted-foreground text-sm sm:text-base leading-relaxed">
+                              {planData.financials || 'No content yet. Use the AI generator or edit manually.'}
+                            </div>
+                          </section>
                         </div>
-                      </section>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* Charts Preview */}
+                  <TabsContent value="charts">
+                    <div className="space-y-4">
+                      <Card className="border-primary/20">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg">Financial Projections & Charts</CardTitle>
+                          <CardDescription>Visual representation of your business financials</CardDescription>
+                        </CardHeader>
+                      </Card>
+                      <BusinessPlanCharts />
                     </div>
-                  </CardContent>
-                </Card>
+                  </TabsContent>
+
+                  {/* Visual Analysis */}
+                  <TabsContent value="visuals">
+                    <div className="space-y-4">
+                      <Card className="border-primary/20">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg">Strategic Analysis & Milestones</CardTitle>
+                          <CardDescription>SWOT analysis, competitive positioning, and business milestones</CardDescription>
+                        </CardHeader>
+                      </Card>
+                      <BusinessPlanVisuals />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
             </Tabs>
           </div>
