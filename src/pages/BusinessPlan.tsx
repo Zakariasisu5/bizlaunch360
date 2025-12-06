@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,8 @@ import { supabase } from '@/integrations/supabase/client';
 import BusinessPlanAIAssistant from '@/components/BusinessPlanAIAssistant';
 import BusinessPlanCharts, { FinancialData } from '@/components/BusinessPlanCharts';
 import BusinessPlanVisuals from '@/components/BusinessPlanVisuals';
+import BusinessPlanTemplates, { IndustryTemplate } from '@/components/BusinessPlanTemplates';
+import { extractFinancialData } from '@/utils/financialDataExtractor';
 
 interface BusinessInfo {
   business_name: string;
@@ -446,6 +448,24 @@ const BusinessPlan = () => {
               <FileText className="h-4 w-4 mr-2" />
               New Plan
             </Button>
+            
+            <BusinessPlanTemplates 
+              onSelectTemplate={(template: IndustryTemplate) => {
+                setPlanTitle(template.name + ' Business Plan');
+                setPlanData({
+                  executiveSummary: template.executiveSummary,
+                  businessDescription: template.businessDescription,
+                  marketAnalysis: template.marketAnalysis,
+                  organization: template.organization,
+                  products: template.products,
+                  marketing: template.marketing,
+                  funding: template.funding,
+                  financials: template.financials,
+                });
+                setCurrentPlanId(null);
+                toast.success(`${template.name} template loaded!`);
+              }}
+            />
             
             <Button 
               variant="outline" 
@@ -933,7 +953,7 @@ const BusinessPlan = () => {
                           <CardDescription>Visual representation of your business financials</CardDescription>
                         </CardHeader>
                       </Card>
-                      <BusinessPlanCharts />
+                      <BusinessPlanCharts financialData={extractFinancialData(planData)} />
                     </div>
                   </TabsContent>
 
