@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ import {
   Upload,
   Save,
   Eye,
-  LogIn
+  LogIn,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -31,12 +32,22 @@ const Settings = () => {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  const profileImageRef = useRef<HTMLInputElement>(null);
+  const logoImageRef = useRef<HTMLInputElement>(null);
+  
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [businessLogo, setBusinessLogo] = useState<string | null>(null);
   
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
     phone: '',
-    bio: ''
+    bio: '',
+    timezone: 'America/New_York'
   });
 
   const [businessData, setBusinessData] = useState({
@@ -44,7 +55,8 @@ const Settings = () => {
     businessType: '',
     website: '',
     address: '',
-    description: ''
+    description: '',
+    phone: ''
   });
 
   const [invoiceSettings, setInvoiceSettings] = useState({
@@ -54,6 +66,7 @@ const Settings = () => {
     email: '',
     taxId: '',
     paymentTerms: '30',
+    currency: 'USD',
     notes: 'Thank you for your business!'
   });
 
@@ -65,7 +78,12 @@ const Settings = () => {
     marketingEmails: false
   });
 
-  // Check authentication status and load user data
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
   useEffect(() => {
     checkAuthStatus();
   }, []);
@@ -89,26 +107,144 @@ const Settings = () => {
 
   const loadUserSettings = async (userId: string) => {
     try {
-      // Load settings from localStorage as fallback
       const savedSettings = localStorage.getItem(`user_settings_${userId}`);
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        setProfileData(settings.profile || profileData);
-        setBusinessData(settings.business || businessData);
-        setInvoiceSettings(settings.invoice || invoiceSettings);
-        setNotifications(settings.notifications || notifications);
+        if (settings.profile) setProfileData(prev => ({ ...prev, ...settings.profile }));
+        if (settings.business) setBusinessData(prev => ({ ...prev, ...settings.business }));
+        if (settings.invoice) setInvoiceSettings(prev => ({ ...prev, ...settings.invoice }));
+        if (settings.notifications) setNotifications(prev => ({ ...prev, ...settings.notifications }));
+        if (settings.profileImage) setProfileImage(settings.profileImage);
+        if (settings.businessLogo) setBusinessLogo(settings.businessLogo);
+      }
+
+      // Load from Supabase profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (profile) {
+        setProfileData(prev => ({
+          ...prev,
+          name: profile.full_name || prev.name
+        }));
+        if (profile.avatar_url) {
+          setProfileImage(profile.avatar_url);
+        }
       }
 
       // Set initial values from user data
-      if (user) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
         setProfileData(prev => ({
           ...prev,
-          name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-          email: user.email || ''
+          name: prev.name || currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || '',
+          email: currentUser.email || ''
         }));
       }
     } catch (error) {
       console.error('Error loading user settings:', error);
+    }
+  };
+
+  const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 2MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingProfile(true);
+    try {
+      // Convert to base64 for local storage (simpler approach without storage bucket)
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        setProfileImage(base64);
+        
+        // Update profile in Supabase
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            avatar_url: base64,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+
+        if (error) throw error;
+
+        // Save to localStorage
+        const savedSettings = localStorage.getItem(`user_settings_${user.id}`);
+        const settings = savedSettings ? JSON.parse(savedSettings) : {};
+        settings.profileImage = base64;
+        localStorage.setItem(`user_settings_${user.id}`, JSON.stringify(settings));
+
+        toast({
+          title: "Success",
+          description: "Profile photo updated successfully!"
+        });
+        setIsUploadingProfile(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload profile photo",
+        variant: "destructive"
+      });
+      setIsUploadingProfile(false);
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 2MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setBusinessLogo(base64);
+        
+        const savedSettings = localStorage.getItem(`user_settings_${user.id}`);
+        const settings = savedSettings ? JSON.parse(savedSettings) : {};
+        settings.businessLogo = base64;
+        localStorage.setItem(`user_settings_${user.id}`, JSON.stringify(settings));
+
+        toast({
+          title: "Success",
+          description: "Business logo updated successfully!"
+        });
+        setIsUploadingLogo(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload logo",
+        variant: "destructive"
+      });
+      setIsUploadingLogo(false);
     }
   };
 
@@ -122,11 +258,22 @@ const Settings = () => {
         business: businessData,
         invoice: invoiceSettings,
         notifications: notifications,
+        profileImage: profileImage,
+        businessLogo: businessLogo,
         updatedAt: new Date().toISOString()
       };
 
-      // Save to localStorage
       localStorage.setItem(`user_settings_${user.id}`, JSON.stringify(settings));
+
+      // Update profile in Supabase
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          full_name: profileData.name,
+          avatar_url: profileImage,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
       
       toast({
         title: "Success",
@@ -142,6 +289,76 @@ const Settings = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all password fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully!"
+      });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to change password",
+        variant: "destructive"
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Sign out the user (actual deletion would require admin API)
+      await supabase.auth.signOut();
+      toast({
+        title: "Account Deletion Requested",
+        description: "Please contact support to complete account deletion."
+      });
+    } catch (error) {
+      console.error('Error:', error);
     }
   };
 
@@ -234,13 +451,33 @@ const Settings = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                  <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                    <User className="h-10 w-10 text-primary" />
+                  <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                    {profileImage ? (
+                      <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-10 w-10 text-primary" />
+                    )}
                   </div>
                   <div>
-                    <Button variant="outline" size="sm">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Photo
+                    <input
+                      type="file"
+                      ref={profileImageRef}
+                      onChange={handleProfileImageUpload}
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => profileImageRef.current?.click()}
+                      disabled={isUploadingProfile}
+                    >
+                      {isUploadingProfile ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {isUploadingProfile ? 'Uploading...' : 'Upload Photo'}
                     </Button>
                     <p className="text-sm text-muted-foreground mt-1">JPG, PNG up to 2MB</p>
                   </div>
@@ -276,7 +513,10 @@ const Settings = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="profile-timezone">Timezone</Label>
-                    <Select defaultValue="America/New_York">
+                    <Select 
+                      value={profileData.timezone}
+                      onValueChange={(value) => setProfileData({ ...profileData, timezone: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -320,13 +560,33 @@ const Settings = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-                  <div className="h-20 w-20 bg-indigo-500/10 rounded-full flex items-center justify-center shrink-0">
-                    <Building className="h-10 w-10 text-indigo-500" />
+                  <div className="h-20 w-20 bg-indigo-500/10 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                    {businessLogo ? (
+                      <img src={businessLogo} alt="Business Logo" className="h-full w-full object-cover" />
+                    ) : (
+                      <Building className="h-10 w-10 text-indigo-500" />
+                    )}
                   </div>
                   <div>
-                    <Button variant="outline" size="sm">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Logo
+                    <input
+                      type="file"
+                      ref={logoImageRef}
+                      onChange={handleLogoUpload}
+                      accept="image/jpeg,image/png,image/svg+xml,image/webp"
+                      className="hidden"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => logoImageRef.current?.click()}
+                      disabled={isUploadingLogo}
+                    >
+                      {isUploadingLogo ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
                     </Button>
                     <p className="text-sm text-muted-foreground mt-1">SVG, PNG up to 2MB</p>
                   </div>
@@ -372,6 +632,8 @@ const Settings = () => {
                     <Label htmlFor="business-phone">Business Phone</Label>
                     <Input
                       id="business-phone"
+                      value={businessData.phone}
+                      onChange={(e) => setBusinessData({ ...businessData, phone: e.target.value })}
                       placeholder="+1 (555) 987-6543"
                     />
                   </div>
@@ -485,7 +747,10 @@ const Settings = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-currency">Currency</Label>
-                    <Select defaultValue="USD">
+                    <Select 
+                      value={invoiceSettings.currency}
+                      onValueChange={(value) => setInvoiceSettings({ ...invoiceSettings, currency: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -615,19 +880,46 @@ const Settings = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" />
+                        <Input 
+                          id="current-password" 
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
+                        <Input 
+                          id="new-password" 
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        />
                       </div>
                       <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input id="confirm-password" type="password" />
+                        <Input 
+                          id="confirm-password" 
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        />
                       </div>
                     </div>
-                    <Button className="mt-4" variant="outline">
-                      Update Password
+                    <Button 
+                      className="mt-4" 
+                      variant="outline"
+                      onClick={handleChangePassword}
+                      disabled={isChangingPassword}
+                    >
+                      {isChangingPassword ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        'Update Password'
+                      )}
                     </Button>
                   </div>
 
@@ -638,7 +930,14 @@ const Settings = () => {
                         <div className="text-sm font-medium">Enable 2FA</div>
                         <div className="text-sm text-muted-foreground">Add an extra layer of security to your account</div>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => toast({
+                          title: "Coming Soon",
+                          description: "Two-factor authentication will be available soon."
+                        })}
+                      >
                         Enable
                       </Button>
                     </div>
@@ -648,15 +947,19 @@ const Settings = () => {
                     <h4 className="text-sm font-medium text-foreground mb-4">Login Activity</h4>
                     <div className="space-y-2">
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
-                        <span>Last login: Jan 24, 2024 at 2:30 PM</span>
-                        <span className="text-muted-foreground">Chrome on Windows</span>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-sm">
-                        <span>Previous login: Jan 23, 2024 at 9:15 AM</span>
-                        <span className="text-muted-foreground">Safari on iPhone</span>
+                        <span>Current session</span>
+                        <span className="text-muted-foreground">{navigator.userAgent.includes('Chrome') ? 'Chrome' : navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Browser'}</span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="mt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => toast({
+                        title: "Activity Log",
+                        description: "Full login activity history coming soon."
+                      })}
+                    >
                       View All Activity
                     </Button>
                   </div>
@@ -664,7 +967,11 @@ const Settings = () => {
                   <div className="border-t border-border pt-4">
                     <h4 className="text-sm font-medium text-destructive mb-4">Danger Zone</h4>
                     <div className="space-y-2">
-                      <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                      <Button 
+                        variant="outline" 
+                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={handleDeleteAccount}
+                      >
                         Delete Account
                       </Button>
                       <p className="text-xs text-muted-foreground">
