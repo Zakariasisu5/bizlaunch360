@@ -56,6 +56,7 @@ const BusinessPlan = () => {
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [savedPlans, setSavedPlans] = useState<BusinessPlanData[]>([]);
   const [showSavedPlans, setShowSavedPlans] = useState(false);
+  const [activeTab, setActiveTab] = useState('edit');
   const [planTitle, setPlanTitle] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -622,7 +623,7 @@ const BusinessPlan = () => {
 
           {/* Content */}
           <div className="lg:col-span-3 order-1 lg:order-2">
-            <Tabs value="edit" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="edit">Edit Plan</TabsTrigger>
                 <TabsTrigger value="preview">Preview</TabsTrigger>
