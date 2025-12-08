@@ -9,6 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -20,7 +22,8 @@ import {
   Save,
   Eye,
   LogIn,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +38,7 @@ const Settings = () => {
   const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
   
   const profileImageRef = useRef<HTMLInputElement>(null);
   const logoImageRef = useRef<HTMLInputElement>(null);
@@ -780,11 +784,163 @@ const Settings = () => {
                     <Save className="h-4 w-4 mr-2" />
                     {isSaving ? 'Saving...' : 'Save Settings'}
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => setShowInvoicePreview(true)}>
                     <Eye className="h-4 w-4 mr-2" />
                     Preview Invoice
                   </Button>
                 </div>
+
+                {/* Invoice Preview Dialog */}
+                <Dialog open={showInvoicePreview} onOpenChange={setShowInvoicePreview}>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Invoice Preview</DialogTitle>
+                    </DialogHeader>
+                    <div className="bg-background border rounded-lg p-6 space-y-6">
+                      {/* Invoice Header */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          {businessLogo ? (
+                            <img src={businessLogo} alt="Logo" className="h-16 w-16 object-contain mb-2" />
+                          ) : (
+                            <div className="h-16 w-16 bg-primary/10 rounded flex items-center justify-center mb-2">
+                              <Building className="h-8 w-8 text-primary" />
+                            </div>
+                          )}
+                          <h2 className="text-xl font-bold">{invoiceSettings.companyName || 'Your Company Name'}</h2>
+                          <p className="text-sm text-muted-foreground whitespace-pre-line">
+                            {invoiceSettings.address || '123 Business Street\nCity, State 12345'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{invoiceSettings.phone || '(555) 123-4567'}</p>
+                          <p className="text-sm text-muted-foreground">{invoiceSettings.email || 'invoice@company.com'}</p>
+                          {invoiceSettings.taxId && (
+                            <p className="text-sm text-muted-foreground">Tax ID: {invoiceSettings.taxId}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <h1 className="text-3xl font-bold text-primary">INVOICE</h1>
+                          <p className="text-sm text-muted-foreground mt-2">Invoice #: INV-001</p>
+                          <p className="text-sm text-muted-foreground">Date: {new Date().toLocaleDateString()}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Due: {new Date(Date.now() + parseInt(invoiceSettings.paymentTerms) * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      {/* Bill To */}
+                      <div>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-1">BILL TO</h3>
+                        <p className="font-medium">Sample Customer</p>
+                        <p className="text-sm text-muted-foreground">456 Customer Ave</p>
+                        <p className="text-sm text-muted-foreground">City, State 67890</p>
+                      </div>
+
+                      {/* Invoice Items */}
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="text-left p-3 text-sm font-medium">Description</th>
+                              <th className="text-right p-3 text-sm font-medium">Qty</th>
+                              <th className="text-right p-3 text-sm font-medium">Rate</th>
+                              <th className="text-right p-3 text-sm font-medium">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-t">
+                              <td className="p-3 text-sm">Sample Service</td>
+                              <td className="p-3 text-sm text-right">1</td>
+                              <td className="p-3 text-sm text-right">
+                                {invoiceSettings.currency === 'USD' && '$'}
+                                {invoiceSettings.currency === 'EUR' && '€'}
+                                {invoiceSettings.currency === 'GBP' && '£'}
+                                {invoiceSettings.currency === 'CAD' && 'CA$'}
+                                100.00
+                              </td>
+                              <td className="p-3 text-sm text-right">
+                                {invoiceSettings.currency === 'USD' && '$'}
+                                {invoiceSettings.currency === 'EUR' && '€'}
+                                {invoiceSettings.currency === 'GBP' && '£'}
+                                {invoiceSettings.currency === 'CAD' && 'CA$'}
+                                100.00
+                              </td>
+                            </tr>
+                            <tr className="border-t">
+                              <td className="p-3 text-sm">Additional Item</td>
+                              <td className="p-3 text-sm text-right">2</td>
+                              <td className="p-3 text-sm text-right">
+                                {invoiceSettings.currency === 'USD' && '$'}
+                                {invoiceSettings.currency === 'EUR' && '€'}
+                                {invoiceSettings.currency === 'GBP' && '£'}
+                                {invoiceSettings.currency === 'CAD' && 'CA$'}
+                                50.00
+                              </td>
+                              <td className="p-3 text-sm text-right">
+                                {invoiceSettings.currency === 'USD' && '$'}
+                                {invoiceSettings.currency === 'EUR' && '€'}
+                                {invoiceSettings.currency === 'GBP' && '£'}
+                                {invoiceSettings.currency === 'CAD' && 'CA$'}
+                                100.00
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Totals */}
+                      <div className="flex justify-end">
+                        <div className="w-64 space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Subtotal</span>
+                            <span>
+                              {invoiceSettings.currency === 'USD' && '$'}
+                              {invoiceSettings.currency === 'EUR' && '€'}
+                              {invoiceSettings.currency === 'GBP' && '£'}
+                              {invoiceSettings.currency === 'CAD' && 'CA$'}
+                              200.00
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Tax (0%)</span>
+                            <span>
+                              {invoiceSettings.currency === 'USD' && '$'}
+                              {invoiceSettings.currency === 'EUR' && '€'}
+                              {invoiceSettings.currency === 'GBP' && '£'}
+                              {invoiceSettings.currency === 'CAD' && 'CA$'}
+                              0.00
+                            </span>
+                          </div>
+                          <Separator />
+                          <div className="flex justify-between font-bold">
+                            <span>Total</span>
+                            <span>
+                              {invoiceSettings.currency === 'USD' && '$'}
+                              {invoiceSettings.currency === 'EUR' && '€'}
+                              {invoiceSettings.currency === 'GBP' && '£'}
+                              {invoiceSettings.currency === 'CAD' && 'CA$'}
+                              200.00
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      {invoiceSettings.notes && (
+                        <div className="bg-muted/50 rounded-lg p-4">
+                          <h3 className="font-semibold text-sm mb-1">Notes</h3>
+                          <p className="text-sm text-muted-foreground">{invoiceSettings.notes}</p>
+                        </div>
+                      )}
+
+                      {/* Payment Terms */}
+                      <div className="text-center text-sm text-muted-foreground">
+                        <p>Payment Terms: Net {invoiceSettings.paymentTerms} Days</p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </CardContent>
             </Card>
           </TabsContent>
