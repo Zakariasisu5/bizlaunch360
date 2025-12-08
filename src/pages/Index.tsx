@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import ProductTour from '@/components/landing/ProductTour';
 import Testimonials from '@/components/landing/Testimonials';
+import FAQ from '@/components/landing/FAQ';
+import ScrollReveal from '@/components/landing/ScrollReveal';
 import StreamingChatbot from '@/components/StreamingChatbot';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -122,44 +124,53 @@ const Index = () => {
       </section>
 
       {/* Testimonials Section */}
-      <Testimonials />
+      <ScrollReveal>
+        <Testimonials />
+      </ScrollReveal>
+
+      {/* FAQ Section */}
+      <ScrollReveal delay={100}>
+        <FAQ />
+      </ScrollReveal>
 
       {/* CTA Section - more conversational */}
-      <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-indigo-600" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
-        
-        <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
-            <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground/80" />
-          </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 sm:mb-6 leading-tight">
-            Your business deserves better than chaos
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-primary-foreground/80 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
-            We built this because we were tired of switching between 10 different apps. Maybe you are too?
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
-            <Link to="/login" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full bg-background text-primary hover:bg-background/90 px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                Get started for free
-              </Button>
-            </Link>
-          </div>
+      <ScrollReveal delay={150}>
+        <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-indigo-600" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30" />
           
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-primary-foreground/70 text-sm sm:text-base">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span>No credit card required</span>
+          <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
+            <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6">
+              <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground/80" />
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span>14-day free trial</span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 sm:mb-6 leading-tight">
+              Your business deserves better than chaos
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-primary-foreground/80 mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
+              We built this because we were tired of switching between 10 different apps. Maybe you are too?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+              <Link to="/login" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full bg-background text-primary hover:bg-background/90 px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                  <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Get started for free
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-primary-foreground/70 text-sm sm:text-base">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>14-day free trial</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
       {/* Footer - simple and clean */}
       <footer className="bg-card border-t border-border py-8 sm:py-12">
