@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
+import { AITaskSuggestions, AIMarketingIdeas } from '@/components/ai';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -28,7 +29,11 @@ const Dashboard = () => {
     totalCustomers: 0,
     appointmentsThisWeek: 0,
     revenueData: [] as any[],
-    customerData: [] as any[]
+    customerData: [] as any[],
+    pendingInvoices: 0,
+    overdueInvoices: 0,
+    newLeads: 0,
+    inactiveCustomers: 0
   });
 
   useEffect(() => {
@@ -51,14 +56,22 @@ const Dashboard = () => {
       ]);
 
       // Calculate monthly revenue (paid invoices)
-      const paidInvoices = (invoicesRes.data || []).filter(inv => inv.status === 'paid');
+      const allInvoices = invoicesRes.data || [];
+      const paidInvoices = allInvoices.filter(inv => inv.status === 'paid');
       const currentMonth = new Date().getMonth();
       const monthlyRevenue = paidInvoices
         .filter(inv => new Date(inv.invoice_date).getMonth() === currentMonth)
         .reduce((sum, inv) => sum + Number(inv.amount), 0);
 
-      // Get total customers
-      const totalCustomers = customersRes.data?.length || 0;
+      // Calculate invoice stats for AI
+      const pendingInvoices = allInvoices.filter(inv => inv.status === 'sent').length;
+      const overdueInvoices = allInvoices.filter(inv => inv.status === 'overdue').length;
+
+      // Get customer stats
+      const allCustomers = customersRes.data || [];
+      const totalCustomers = allCustomers.length;
+      const newLeads = allCustomers.filter((c: any) => c.status === 'lead').length;
+      const inactiveCustomers = allCustomers.filter((c: any) => c.status === 'inactive').length;
 
       // Calculate appointments this week
       const today = new Date();
@@ -120,7 +133,11 @@ const Dashboard = () => {
         totalCustomers,
         appointmentsThisWeek,
         revenueData,
-        customerData
+        customerData,
+        pendingInvoices,
+        overdueInvoices,
+        newLeads,
+        inactiveCustomers
       });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -322,6 +339,24 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* AI-Powered Features */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AITaskSuggestions 
+            businessData={{
+              pendingInvoices: dashboardData.pendingInvoices,
+              overdueInvoices: dashboardData.overdueInvoices,
+              newLeads: dashboardData.newLeads,
+              upcomingAppointments: dashboardData.appointmentsThisWeek,
+              inactiveCustomers: dashboardData.inactiveCustomers
+            }}
+          />
+          <AIMarketingIdeas 
+            businessInfo={{
+              customerCount: dashboardData.totalCustomers
+            }}
+          />
         </div>
 
         {/* Business Health Score */}

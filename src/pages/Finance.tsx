@@ -27,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { AIFinancialForecast } from '@/components/ai';
 
 interface Invoice {
   id: string;
@@ -369,6 +370,16 @@ const Finance = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
+            {/* AI Financial Forecast */}
+            <AIFinancialForecast 
+              financialData={{
+                monthlyRevenue: totalRevenue,
+                monthlyExpenses: totalExpenses,
+                totalCustomers: invoices.length,
+                averageTransaction: invoices.length > 0 ? totalRevenue / invoices.length : 0
+              }}
+            />
+
             {/* Financial Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
               <Card className="card-hover">

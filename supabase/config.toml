@@ -11,3 +11,18 @@ verify_jwt = false
 
 [functions.generate-content]
 verify_jwt = false
+
+[functions.ai-financial-forecast]
+verify_jwt = false
+
+[functions.ai-customer-messaging]
+verify_jwt = false
+
+[functions.ai-task-suggestions]
+verify_jwt = false
+
+[functions.ai-appointment-reminders]
+verify_jwt = false
+
+[functions.ai-marketing-ideas]
+verify_jwt = false
