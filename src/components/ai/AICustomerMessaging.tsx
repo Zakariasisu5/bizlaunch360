@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, Loader2, Sparkles, Copy, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { MessageSquare, Loader2, Sparkles, Copy, Check, Send, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -16,6 +17,7 @@ interface CustomerInfo {
 interface BusinessInfo {
   name?: string;
   type?: string;
+  email?: string;
 }
 
 interface AICustomerMessagingProps {
@@ -30,10 +32,12 @@ export const AICustomerMessaging: React.FC<AICustomerMessagingProps> = ({
   onMessageGenerated 
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [messageType, setMessageType] = useState('follow-up');
   const [context, setContext] = useState('');
   const [generatedMessage, setGeneratedMessage] = useState('');
   const [copied, setCopied] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState(customer?.email || '');
 
   const messageTypes = [
     { value: 'follow-up', label: 'Follow-up' },
@@ -43,6 +47,18 @@ export const AICustomerMessaging: React.FC<AICustomerMessagingProps> = ({
     { value: 'promotion', label: 'Promotion' },
     { value: 'reply', label: 'Reply' },
   ];
+
+  const getSubjectFromType = (type: string, customerName: string): string => {
+    const subjects: Record<string, string> = {
+      'follow-up': `Following up - ${businessInfo?.name || 'Our Team'}`,
+      'reminder': `Friendly Reminder from ${businessInfo?.name || 'Us'}`,
+      'confirmation': `Confirmation - ${businessInfo?.name || 'Our Team'}`,
+      'thank-you': `Thank You, ${customerName}!`,
+      'promotion': `Special Offer from ${businessInfo?.name || 'Us'}`,
+      'reply': `Re: Your Message - ${businessInfo?.name || 'Our Team'}`,
+    };
+    return subjects[type] || `Message from ${businessInfo?.name || 'Our Team'}`;
+  };
 
   const generateMessage = async () => {
     setIsLoading(true);
@@ -77,6 +93,41 @@ export const AICustomerMessaging: React.FC<AICustomerMessagingProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const sendEmail = async () => {
+    if (!recipientEmail) {
+      toast.error('Please enter recipient email');
+      return;
+    }
+
+    if (!generatedMessage) {
+      toast.error('Please generate a message first');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-customer-email', {
+        body: {
+          to: recipientEmail,
+          subject: getSubjectFromType(messageType, customer?.name || 'Customer'),
+          message: generatedMessage,
+          businessName: businessInfo?.name,
+          businessEmail: businessInfo?.email
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(`Email sent to ${recipientEmail}!`);
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast.error(error.message || 'Failed to send email');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <Card className="border-primary/20">
       <CardHeader>
@@ -85,7 +136,7 @@ export const AICustomerMessaging: React.FC<AICustomerMessagingProps> = ({
           <CardTitle className="text-lg">AI Customer Messaging</CardTitle>
         </div>
         <CardDescription>
-          Generate personalized messages for {customer?.name || 'your customers'}
+          Generate and send personalized messages for {customer?.name || 'your customers'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -135,22 +186,58 @@ export const AICustomerMessaging: React.FC<AICustomerMessagingProps> = ({
         </Button>
 
         {generatedMessage && (
-          <div className="relative">
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm whitespace-pre-wrap">{generatedMessage}</p>
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm whitespace-pre-wrap pr-10">{generatedMessage}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute top-2 right-2"
+                onClick={copyToClipboard}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="absolute top-2 right-2"
-              onClick={copyToClipboard}
-            >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
+
+            {/* Email Sending Section */}
+            <div className="p-4 border border-primary/20 rounded-lg bg-primary/5 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <Mail className="h-4 w-4" />
+                Send via Email
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  type="email"
+                  placeholder="Recipient email"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={sendEmail}
+                  disabled={isSending || !recipientEmail}
+                  className="sm:w-auto"
+                >
+                  {isSending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Email
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
