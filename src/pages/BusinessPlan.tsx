@@ -566,16 +566,19 @@ const BusinessPlan = () => {
               onClick={handleGenerateWithAI}
               disabled={isGenerating}
               size="lg"
+              className="w-full sm:w-auto"
             >
               {isGenerating ? (
                 <>
                   <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                  Generating Comprehensive Plan...
+                  <span className="hidden sm:inline">Generating Comprehensive Plan...</span>
+                  <span className="sm:hidden">Generating...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generate Complete Business Plan
+                  <span className="hidden sm:inline">Generate Complete Business Plan</span>
+                  <span className="sm:hidden">Generate Plan</span>
                 </>
               )}
             </Button>

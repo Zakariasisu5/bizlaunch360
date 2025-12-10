@@ -22,8 +22,10 @@ import {
   Eye,
   Edit,
   Trash2,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react';
+import { generateIncomeStatement, generateExpenseReport, generateTaxSummary } from '@/utils/reportGenerator';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +48,113 @@ interface Expense {
   category: string;
   date: string;
 }
+
+// Export Reports Card Component
+const ExportReportsCard: React.FC<{ invoices: Invoice[], expenses: Expense[] }> = ({ invoices, expenses }) => {
+  const [isGeneratingIncome, setIsGeneratingIncome] = useState(false);
+  const [isGeneratingExpense, setIsGeneratingExpense] = useState(false);
+  const [isGeneratingTax, setIsGeneratingTax] = useState(false);
+
+  const handleIncomeStatement = async () => {
+    setIsGeneratingIncome(true);
+    try {
+      await generateIncomeStatement({ 
+        invoices: invoices.map(inv => ({ ...inv, number: inv.number })), 
+        expenses 
+      });
+      toast.success('Income statement downloaded!');
+    } catch (error) {
+      console.error('Error generating income statement:', error);
+      toast.error('Failed to generate income statement');
+    } finally {
+      setIsGeneratingIncome(false);
+    }
+  };
+
+  const handleExpenseReport = async () => {
+    setIsGeneratingExpense(true);
+    try {
+      await generateExpenseReport({ 
+        invoices: invoices.map(inv => ({ ...inv, number: inv.number })), 
+        expenses 
+      });
+      toast.success('Expense report downloaded!');
+    } catch (error) {
+      console.error('Error generating expense report:', error);
+      toast.error('Failed to generate expense report');
+    } finally {
+      setIsGeneratingExpense(false);
+    }
+  };
+
+  const handleTaxSummary = async () => {
+    setIsGeneratingTax(true);
+    try {
+      await generateTaxSummary({ 
+        invoices: invoices.map(inv => ({ ...inv, number: inv.number })), 
+        expenses 
+      });
+      toast.success('Tax summary downloaded!');
+    } catch (error) {
+      console.error('Error generating tax summary:', error);
+      toast.error('Failed to generate tax summary');
+    } finally {
+      setIsGeneratingTax(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Export Reports</CardTitle>
+        <CardDescription>Download detailed financial reports</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Button 
+            variant="outline" 
+            className="justify-start" 
+            onClick={handleIncomeStatement}
+            disabled={isGeneratingIncome}
+          >
+            {isGeneratingIncome ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Income Statement
+          </Button>
+          <Button 
+            variant="outline" 
+            className="justify-start"
+            onClick={handleExpenseReport}
+            disabled={isGeneratingExpense}
+          >
+            {isGeneratingExpense ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Expense Report
+          </Button>
+          <Button 
+            variant="outline" 
+            className="justify-start"
+            onClick={handleTaxSummary}
+            disabled={isGeneratingTax}
+          >
+            {isGeneratingTax ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Tax Summary
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Finance = () => {
   const { user } = useAuth();
@@ -640,28 +749,7 @@ const Finance = () => {
               </Card>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Export Reports</CardTitle>
-                <CardDescription>Download detailed financial reports</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Button variant="outline" className="justify-start">
-                    <Download className="h-4 w-4 mr-2" />
-                    Income Statement
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <Download className="h-4 w-4 mr-2" />
-                    Expense Report
-                  </Button>
-                  <Button variant="outline" className="justify-start">
-                    <Download className="h-4 w-4 mr-2" />
-                    Tax Summary
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <ExportReportsCard invoices={invoices} expenses={expenses} />
           </TabsContent>
         </Tabs>
       </div>
