@@ -206,6 +206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          name: string
+          subject: string
+          template_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          name: string
+          subject: string
+          template_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          name?: string
+          subject?: string
+          template_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
@@ -308,6 +341,56 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_emails: {
+        Row: {
+          appointment_id: string | null
+          body: string
+          created_at: string
+          id: string
+          recipient_email: string
+          recipient_name: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          recipient_email: string
+          recipient_name: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          recipient_email?: string
+          recipient_name?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_emails_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           created_at: string
@@ -336,6 +419,45 @@ export type Database = {
           id?: string
           name?: string
           price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          content: string
+          created_at: string
+          customer_avatar_url: string | null
+          customer_company: string | null
+          customer_name: string
+          id: string
+          is_featured: boolean | null
+          rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          customer_avatar_url?: string | null
+          customer_company?: string | null
+          customer_name: string
+          id?: string
+          is_featured?: boolean | null
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          customer_avatar_url?: string | null
+          customer_company?: string | null
+          customer_name?: string
+          id?: string
+          is_featured?: boolean | null
+          rating?: number | null
           updated_at?: string
           user_id?: string
         }

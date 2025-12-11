@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import EmailTemplates from '@/components/EmailTemplates';
+import TestimonialsManager from '@/components/TestimonialsManager';
+import AutomatedEmailScheduler from '@/components/AutomatedEmailScheduler';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -23,7 +26,9 @@ import {
   Eye,
   LogIn,
   Loader2,
-  X
+  X,
+  Mail,
+  Quote
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -435,12 +440,20 @@ const Settings = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-            <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-1">
-              <TabsTrigger value="profile" className="text-xs sm:text-sm px-3 sm:px-4">Profile</TabsTrigger>
-              <TabsTrigger value="business" className="text-xs sm:text-sm px-3 sm:px-4">Business</TabsTrigger>
-              <TabsTrigger value="invoicing" className="text-xs sm:text-sm px-3 sm:px-4">Invoicing</TabsTrigger>
-              <TabsTrigger value="notifications" className="text-xs sm:text-sm px-3 sm:px-4">Notif.</TabsTrigger>
-              <TabsTrigger value="security" className="text-xs sm:text-sm px-3 sm:px-4">Security</TabsTrigger>
+            <TabsList className="inline-flex w-max min-w-full sm:w-full sm:grid sm:grid-cols-4 lg:grid-cols-8 gap-1">
+              <TabsTrigger value="profile" className="text-xs sm:text-sm px-2 sm:px-3">Profile</TabsTrigger>
+              <TabsTrigger value="business" className="text-xs sm:text-sm px-2 sm:px-3">Business</TabsTrigger>
+              <TabsTrigger value="invoicing" className="text-xs sm:text-sm px-2 sm:px-3">Invoicing</TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3">Notif.</TabsTrigger>
+              <TabsTrigger value="emails" className="text-xs sm:text-sm px-2 sm:px-3">
+                <Mail className="h-3 w-3 mr-1 hidden sm:inline" />
+                Email
+              </TabsTrigger>
+              <TabsTrigger value="testimonials" className="text-xs sm:text-sm px-2 sm:px-3">
+                <Quote className="h-3 w-3 mr-1 hidden sm:inline" />
+                Reviews
+              </TabsTrigger>
+              <TabsTrigger value="security" className="text-xs sm:text-sm px-2 sm:px-3">Security</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1138,6 +1151,17 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Email Templates & Scheduling Tab */}
+          <TabsContent value="emails" className="space-y-6">
+            <EmailTemplates />
+            <AutomatedEmailScheduler />
+          </TabsContent>
+
+          {/* Testimonials Tab */}
+          <TabsContent value="testimonials" className="space-y-6">
+            <TestimonialsManager />
           </TabsContent>
         </Tabs>
       </div>
